@@ -205,3 +205,35 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Design docs (keep in git, but ignore temp files)
+.superpowers/
