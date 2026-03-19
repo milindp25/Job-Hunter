@@ -171,6 +171,20 @@ class TestContactInfo:
         assert result is not None
         assert result["severity"] == "warning"
 
+    def test_missing_name_is_warning(self) -> None:
+        resume = _make_resume(
+            parsed_data={
+                "full_name": None,
+                "email": "john@example.com",
+                "phone": "555-123-4567",
+                "skills": [],
+                "experience": [],
+            }
+        )
+        result = check_contact_info(resume)
+        assert result is not None
+        assert result["severity"] == "warning"
+
 
 # ---------------------------------------------------------------------------
 # TestStandardSections

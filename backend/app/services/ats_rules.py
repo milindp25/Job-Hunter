@@ -264,6 +264,8 @@ def check_contact_info(resume: object) -> dict[str, Any] | None:
     parsed_data = _get_dict(resume, "parsed_data")
 
     missing: list[str] = []
+    if not parsed_data.get("full_name"):
+        missing.append("name")
     if not parsed_data.get("email"):
         missing.append("email address")
     if not parsed_data.get("phone"):
@@ -672,15 +674,6 @@ _TEXT_DEPENDENT_RULES = [
     check_chronological_order,
 ]
 
-# Structural rules that can run even when text extraction failed
-_STRUCTURAL_RULES = [
-    check_file_size,
-    check_embedded_images,
-    check_text_boxes,
-    check_font_detection,
-    check_hyperlink_formatting,
-    check_chronological_order,
-]
 
 
 def run_all_rules(resume: object) -> list[dict[str, Any]]:
