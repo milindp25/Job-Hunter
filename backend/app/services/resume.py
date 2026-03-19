@@ -15,6 +15,7 @@ from app.exceptions import (
     ResumeUploadError,
 )
 from app.models.resume import Resume
+from app.services import ats_checker
 from app.services.resume_parser import parse_resume
 from app.services.storage import get_storage
 
@@ -133,6 +134,16 @@ async def upload_resume(
     )
     session.add(resume)
     await session.flush()
+
+    # Auto-run ATS format check (never fail the upload if this fails)
+    try:
+        await ats_checker.run_format_check(session, resume)
+    except Exception:
+        log.warning(
+            "ats_format_check_on_upload_failed",
+            resume_id=str(resume.id),
+            user_id=user_id,
+        )
 
     log.info(
         "resume_uploaded",
