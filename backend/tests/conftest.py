@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import io
 import os
 from collections.abc import AsyncGenerator
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -21,6 +23,10 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-characters-long!"
 os.environ["REDIS_URL"] = "redis://localhost:6379"
+os.environ["R2_ACCOUNT_ID"] = "test-account-id"
+os.environ["R2_ACCESS_KEY_ID"] = "test-access-key"
+os.environ["R2_SECRET_ACCESS_KEY"] = "test-secret-key"
+os.environ["R2_BUCKET_NAME"] = "test-bucket"
 
 # Now it is safe to import the app and its dependencies.
 from app.config import get_settings  # noqa: E402
@@ -110,3 +116,34 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
     data = response.json()
     access_token = data["access_token"]
     return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture
+def sample_pdf_bytes() -> bytes:
+    """Create minimal PDF bytes with resume-like content."""
+    import fitz
+
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text(
+        (72, 72),
+        "John Doe\njohn@example.com\n555-123-4567\n\nSkills\nPython, TypeScript, React",
+    )
+    content = doc.tobytes()
+    doc.close()
+    return content
+
+
+@pytest.fixture
+def sample_docx_bytes() -> bytes:
+    """Create minimal DOCX bytes with resume-like content."""
+    from docx import Document
+
+    doc = Document()
+    doc.add_paragraph("Jane Smith")
+    doc.add_paragraph("jane@example.com")
+    doc.add_heading("Skills", level=1)
+    doc.add_paragraph("Python, React, SQL")
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()

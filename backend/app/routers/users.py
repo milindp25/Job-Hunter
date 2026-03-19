@@ -15,11 +15,13 @@ from app.schemas.onboarding import (
 from app.schemas.user import (
     EducationUpdateRequest,
     ExperienceUpdateRequest,
+    LinkedInImportRequest,
     ProfileResponse,
     ProfileUpdateRequest,
     SkillsUpdateRequest,
     UserWithProfileResponse,
 )
+from app.services.linkedin import import_linkedin_profile
 from app.services.onboarding import (
     complete_onboarding,
     get_onboarding_status,
@@ -198,6 +200,18 @@ async def delete_me(
     user_id = str(current_user["sub"])
     await deactivate_user(session, user_id)
     return Response(status_code=204)
+
+
+@router.post("/me/linkedin/import")
+async def import_linkedin(
+    body: LinkedInImportRequest,
+    current_user: dict[str, str | int] = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, str | list[str] | None]:
+    """Import profile data from a LinkedIn public profile URL."""
+    user_id = str(current_user["sub"])
+    result = await import_linkedin_profile(session, user_id, body.linkedin_url)
+    return result
 
 
 # ---------------------------------------------------------------------------

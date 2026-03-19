@@ -8,9 +8,11 @@ import { SkillsForm } from "./skills-form";
 import { ExperienceForm } from "./experience-form";
 import { EducationForm } from "./education-form";
 import { PreferencesForm } from "./preferences-form";
+import { ResumeManager } from "./resume-manager";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { value: "resumes", label: "Resumes" },
   { value: "personal", label: "Personal Info" },
   { value: "skills", label: "Skills" },
   { value: "experience", label: "Experience" },
@@ -75,7 +77,7 @@ export function ProfileContent() {
         </Progress.Root>
       </div>
 
-      <Tabs.Root defaultValue="personal">
+      <Tabs.Root defaultValue="resumes">
         <Tabs.List
           className="flex gap-1 overflow-x-auto border-b border-foreground/10 pb-px"
           aria-label="Profile sections"
@@ -97,6 +99,9 @@ export function ProfileContent() {
         </Tabs.List>
 
         <div className="pt-6">
+          <Tabs.Content value="resumes">
+            <ResumeManager />
+          </Tabs.Content>
           <Tabs.Content value="personal">
             <PersonalInfoForm />
           </Tabs.Content>

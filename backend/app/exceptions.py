@@ -67,6 +67,41 @@ class TokenExpiredError(AppException):
         )
 
 
+class ResumeNotFoundError(AppException):
+    """Raised when a requested resume does not exist."""
+
+    def __init__(self, detail: str = "Resume not found") -> None:
+        super().__init__(detail=detail, error_code="RESUME_NOT_FOUND", status_code=404)
+
+
+class ResumeUploadError(AppException):
+    """Raised when resume upload/storage fails."""
+
+    def __init__(self, detail: str = "Failed to upload resume") -> None:
+        super().__init__(detail=detail, error_code="RESUME_UPLOAD_ERROR", status_code=500)
+
+
+class ResumeLimitExceededError(AppException):
+    """Raised when user exceeds the maximum number of stored resumes."""
+
+    def __init__(self, detail: str = "Maximum resume limit reached (10)") -> None:
+        super().__init__(detail=detail, error_code="RESUME_LIMIT_EXCEEDED", status_code=400)
+
+
+class InvalidFileTypeError(AppException):
+    """Raised when an unsupported file type is uploaded."""
+
+    def __init__(self, detail: str = "Only PDF and DOCX files are accepted") -> None:
+        super().__init__(detail=detail, error_code="INVALID_FILE_TYPE", status_code=400)
+
+
+class FileTooLargeError(AppException):
+    """Raised when an uploaded file exceeds the size limit."""
+
+    def __init__(self, detail: str = "File too large. Maximum size is 5 MB") -> None:
+        super().__init__(detail=detail, error_code="FILE_TOO_LARGE", status_code=400)
+
+
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
     """Global exception handler that converts AppException into a structured JSON response."""
     return JSONResponse(

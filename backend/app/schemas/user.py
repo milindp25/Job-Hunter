@@ -90,6 +90,12 @@ class EducationUpdateRequest(BaseModel):
     education: list[EducationItem]
 
 
+class LinkedInImportRequest(BaseModel):
+    """Request body for LinkedIn profile import."""
+
+    linkedin_url: str
+
+
 class UserWithProfileResponse(BaseModel):
     """Combined user and profile response."""
 

@@ -2,10 +2,26 @@ from __future__ import annotations
 
 import io
 import re
+from typing import TypedDict
 
 import structlog
 
 log = structlog.get_logger()
+
+
+class ParsedResumeData(TypedDict):
+    """Structured data extracted from a resume."""
+
+    full_name: str | None
+    email: str | None
+    phone: str | None
+    location: str | None
+    summary: str | None
+    skills: list[str]
+    experience: list[dict[str, str | None]]
+    education: list[dict[str, str | None]]
+    certifications: list[str]
+    raw_text: str
 
 # ---------------------------------------------------------------------------
 # Regex patterns
@@ -194,10 +210,28 @@ def _extract_certifications(section_text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-async def parse_resume(file_content: bytes, filename: str) -> dict[
-    str,
-    str | None | list[str] | list[dict[str, str | None]],
-]:
+async def extract_text(file_content: bytes, filename: str) -> str:
+    """Extract raw text from a resume file (PDF or DOCX).
+
+    Args:
+        file_content: Raw bytes of the uploaded file.
+        filename: Original filename (used to determine file type).
+
+    Returns:
+        The full extracted text.
+
+    Raises:
+        ValueError: If the file format is not supported.
+    """
+    lower_name = filename.lower()
+    if lower_name.endswith(".pdf"):
+        return _extract_text_from_pdf(file_content)
+    if lower_name.endswith(".docx"):
+        return _extract_text_from_docx(file_content)
+    raise ValueError(f"Unsupported file format: {filename}")
+
+
+async def parse_resume(file_content: bytes, filename: str) -> ParsedResumeData:
     """Parse a resume file and extract structured data.
 
     Args:
@@ -205,21 +239,11 @@ async def parse_resume(file_content: bytes, filename: str) -> dict[
         filename: Original filename (used to determine file type).
 
     Returns:
-        dict with keys: full_name, email, phone, location, summary,
-        skills (list of skill names), experience (list of dicts),
-        education (list of dicts), certifications (list of str).
+        ParsedResumeData with keys: full_name, email, phone, location,
+        summary, skills, experience, education, certifications, raw_text.
     """
-    lower_name = filename.lower()
-
-    if lower_name.endswith(".pdf"):
-        log.info("resume_parse_started", filename=filename, file_type="pdf")
-        text = _extract_text_from_pdf(file_content)
-    elif lower_name.endswith(".docx"):
-        log.info("resume_parse_started", filename=filename, file_type="docx")
-        text = _extract_text_from_docx(file_content)
-    else:
-        log.warning("resume_unsupported_format", filename=filename)
-        raise ValueError(f"Unsupported file format: {filename}. Only PDF and DOCX are supported.")
+    log.info("resume_parse_started", filename=filename)
+    text = await extract_text(file_content, filename)
 
     log.debug("resume_text_extracted", char_count=len(text))
 
@@ -259,7 +283,7 @@ async def parse_resume(file_content: bytes, filename: str) -> dict[
             certifications = _extract_certifications(sections[key])
             break
 
-    result: dict[str, str | None | list[str] | list[dict[str, str | None]]] = {
+    result: ParsedResumeData = {
         "full_name": full_name,
         "email": email,
         "phone": phone,
@@ -269,6 +293,7 @@ async def parse_resume(file_content: bytes, filename: str) -> dict[
         "experience": experience,
         "education": education,
         "certifications": certifications,
+        "raw_text": text,
     }
 
     log.info(
