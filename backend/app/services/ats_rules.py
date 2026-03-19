@@ -8,7 +8,33 @@ from __future__ import annotations
 
 import re
 import uuid
-from typing import Any  # noqa: TCH003
+from collections.abc import Callable
+from typing import TypedDict
+
+# ---------------------------------------------------------------------------
+# Finding type
+# ---------------------------------------------------------------------------
+
+
+class Finding(TypedDict):
+    """A single ATS format finding."""
+
+    id: str
+    rule_id: str
+    category: str
+    severity: str
+    confidence: str
+    title: str
+    detail: str
+    suggestion: str
+    section: str | None
+    metadata: dict[str, str | int | float | bool | list[str] | None]
+    dismissed: bool
+
+
+# Type alias for rule functions
+_RuleFn = Callable[[object], Finding | None]
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -23,25 +49,22 @@ def _make_finding(
     detail: str,
     suggestion: str,
     section: str | None = None,
-    metadata: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+    metadata: dict[str, str | int | float | bool | list[str] | None] | None = None,
+) -> Finding:
     """Build a normalised finding dict."""
-    finding: dict[str, Any] = {
-        "id": str(uuid.uuid4()),
-        "rule_id": rule_id,
-        "category": "format",
-        "severity": severity,
-        "confidence": confidence,
-        "title": title,
-        "detail": detail,
-        "suggestion": suggestion,
-        "dismissed": False,
-    }
-    if section is not None:
-        finding["section"] = section
-    if metadata is not None:
-        finding["metadata"] = metadata
-    return finding
+    return Finding(
+        id=str(uuid.uuid4()),
+        rule_id=rule_id,
+        category="format",
+        severity=severity,
+        confidence=confidence,
+        title=title,
+        detail=detail,
+        suggestion=suggestion,
+        section=section,
+        metadata=metadata if metadata is not None else {},
+        dismissed=False,
+    )
 
 
 def _get_str(obj: object, attr: str) -> str:
@@ -56,7 +79,7 @@ def _get_int(obj: object, attr: str, default: int = 0) -> int:
     return value if isinstance(value, int) else default
 
 
-def _get_dict(obj: object, attr: str) -> dict[str, Any]:
+def _get_dict(obj: object, attr: str) -> dict[str, object]:
     """Safely retrieve a dict attribute from the resume-like object."""
     value = getattr(obj, attr, None)
     return value if isinstance(value, dict) else {}
@@ -67,7 +90,7 @@ def _get_dict(obj: object, attr: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def check_parseable_text(resume: object) -> dict[str, Any] | None:
+def check_parseable_text(resume: object) -> Finding | None:
     """Detect image-only or encrypted PDFs that extracted no usable text."""
     raw_text = _get_str(resume, "raw_text")
     file_size = _get_int(resume, "file_size")
@@ -99,7 +122,7 @@ def check_parseable_text(resume: object) -> dict[str, Any] | None:
 _NON_WORD_RE = re.compile(r"[^\w\s]")
 
 
-def check_text_quality(resume: object) -> dict[str, Any] | None:
+def check_text_quality(resume: object) -> Finding | None:
     """Flag garbled extraction: >20% non-word characters."""
     raw_text = _get_str(resume, "raw_text")
     if not raw_text:
@@ -136,7 +159,7 @@ def check_text_quality(resume: object) -> dict[str, Any] | None:
 _TAB_RE = re.compile(r"\t")
 
 
-def check_tables(resume: object) -> dict[str, Any] | None:
+def check_tables(resume: object) -> Finding | None:
     """Detect tab-heavy lines indicating table usage (>3 tabs per line in >5% of lines)."""
     raw_text = _get_str(resume, "raw_text")
     if not raw_text:
@@ -175,7 +198,7 @@ def check_tables(resume: object) -> dict[str, Any] | None:
 _LARGE_GAP_RE = re.compile(r"\S {5,}\S")
 
 
-def check_multi_column(resume: object) -> dict[str, Any] | None:
+def check_multi_column(resume: object) -> Finding | None:
     """Detect multi-column layout via large mid-line whitespace gaps in >10% of lines."""
     raw_text = _get_str(resume, "raw_text")
     if not raw_text:
@@ -222,7 +245,7 @@ _SKILLS_RE = re.compile(
 )
 
 
-def check_standard_sections(resume: object) -> dict[str, Any] | None:
+def check_standard_sections(resume: object) -> Finding | None:
     """Warn when standard resume sections are absent."""
     raw_text = _get_str(resume, "raw_text")
 
@@ -259,7 +282,7 @@ def check_standard_sections(resume: object) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def check_contact_info(resume: object) -> dict[str, Any] | None:
+def check_contact_info(resume: object) -> Finding | None:
     """Warn when key contact fields are absent from parsed data."""
     parsed_data = _get_dict(resume, "parsed_data")
 
@@ -293,7 +316,7 @@ def check_contact_info(resume: object) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def check_resume_length(resume: object) -> dict[str, Any] | None:
+def check_resume_length(resume: object) -> Finding | None:
     """Flag resumes that are suspiciously short (<100 words) or very long (>1500 words)."""
     raw_text = _get_str(resume, "raw_text")
     word_count = len(raw_text.split())
@@ -342,7 +365,7 @@ def check_resume_length(resume: object) -> dict[str, Any] | None:
 _TWO_MB = 2_097_152  # 2 × 1024 × 1024
 
 
-def check_file_size(resume: object) -> dict[str, Any] | None:
+def check_file_size(resume: object) -> Finding | None:
     """Inform when file exceeds 2 MB — some portals reject larger uploads."""
     file_size = _get_int(resume, "file_size")
 
@@ -374,7 +397,7 @@ _EMAIL_RE = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
 _PHONE_RE = re.compile(r"\+?[\d][\d\s\-().]{7,}\d")
 
 
-def check_header_footer_info(resume: object) -> dict[str, Any] | None:
+def check_header_footer_info(resume: object) -> Finding | None:
     """Warn if contact info appears only in the header/footer region (first/last 2 lines)."""
     raw_text = _get_str(resume, "raw_text")
     lines = [line for line in raw_text.splitlines() if line.strip()]
@@ -418,13 +441,13 @@ def check_header_footer_info(resume: object) -> dict[str, Any] | None:
 _FANCY_BULLET_RE = re.compile(r"[►★➤➜➡▶◆◇■□▪▸‣⁃]")
 
 
-def check_bullet_characters(resume: object) -> dict[str, Any] | None:
+def check_bullet_characters(resume: object) -> Finding | None:
     """Warn when non-standard bullet characters are present."""
     raw_text = _get_str(resume, "raw_text")
     matches = _FANCY_BULLET_RE.findall(raw_text)
 
     if matches:
-        unique = list({m for m in matches})
+        unique = list(set(matches))
         return _make_finding(
             rule_id="bullet_characters",
             severity="warning",
@@ -457,7 +480,7 @@ _DATE_FORMATS: dict[str, re.Pattern[str]] = {
 }
 
 
-def check_date_consistency(resume: object) -> dict[str, Any] | None:
+def check_date_consistency(resume: object) -> Finding | None:
     """Warn when multiple incompatible date formats are mixed across the resume."""
     raw_text = _get_str(resume, "raw_text")
 
@@ -499,7 +522,7 @@ _EXPERIENCE_SECTION_RE = re.compile(
 )
 
 
-def check_chronological_order(resume: object) -> dict[str, Any] | None:
+def check_chronological_order(resume: object) -> Finding | None:
     """Warn when experience years are not in descending (reverse-chrono) order."""
     raw_text = _get_str(resume, "raw_text")
 
@@ -540,7 +563,7 @@ def check_chronological_order(resume: object) -> dict[str, Any] | None:
 _IMAGE_BYTES_PER_CHAR_THRESHOLD = 50
 
 
-def check_embedded_images(resume: object) -> dict[str, Any] | None:
+def check_embedded_images(resume: object) -> Finding | None:
     """Warn when the bytes-per-character ratio suggests embedded images."""
     file_size = _get_int(resume, "file_size")
     raw_text = _get_str(resume, "raw_text")
@@ -575,7 +598,7 @@ def check_embedded_images(resume: object) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def check_font_detection(resume: object) -> dict[str, Any] | None:
+def check_font_detection(resume: object) -> Finding | None:
     """Low-confidence info note — font analysis requires deeper PDF inspection."""
     file_type = _get_str(resume, "file_type")
     if file_type != "pdf":
@@ -604,7 +627,7 @@ def check_font_detection(resume: object) -> dict[str, Any] | None:
 _URL_RE = re.compile(r"https?://\S+")
 
 
-def check_hyperlink_formatting(resume: object) -> dict[str, Any] | None:
+def check_hyperlink_formatting(resume: object) -> Finding | None:
     """Info note when raw URLs are present — some ATS truncate or break them."""
     raw_text = _get_str(resume, "raw_text")
     matches = _URL_RE.findall(raw_text)
@@ -633,7 +656,7 @@ def check_hyperlink_formatting(resume: object) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def check_text_boxes(resume: object) -> dict[str, Any] | None:
+def check_text_boxes(resume: object) -> Finding | None:
     """Critical note for DOCX files about text box limitations."""
     file_type = _get_str(resume, "file_type")
     if file_type != "docx":
@@ -660,8 +683,15 @@ def check_text_boxes(resume: object) -> dict[str, Any] | None:
 # Orchestrator
 # ---------------------------------------------------------------------------
 
-# Rules that require readable text to be meaningful
-_TEXT_DEPENDENT_RULES = [
+# Structural checks that can run even when text extraction failed
+_STRUCTURAL_RULES: list[_RuleFn] = [
+    check_file_size,
+    check_embedded_images,
+    check_text_boxes,
+]
+
+# Rules that require readable extracted text to be meaningful
+_TEXT_DEPENDENT_RULES: list[_RuleFn] = [
     check_text_quality,
     check_tables,
     check_multi_column,
@@ -672,53 +702,31 @@ _TEXT_DEPENDENT_RULES = [
     check_bullet_characters,
     check_date_consistency,
     check_chronological_order,
+    check_font_detection,
+    check_hyperlink_formatting,
 ]
 
 
-
-def run_all_rules(resume: object) -> list[dict[str, Any]]:
+def run_all_rules(resume: object) -> list[Finding]:
     """Run all 16 format rules and return a list of findings.
 
     Short-circuit behaviour: if ``check_parseable_text`` returns a blocker,
     skip the text-dependent rules and only run structural checks.
     """
-    findings: list[dict[str, Any]] = []
+    findings: list[Finding] = []
 
     parseable_finding = check_parseable_text(resume)
     if parseable_finding is not None:
         findings.append(parseable_finding)
-        # Short-circuit: skip text-dependent rules
-        structural = [
-            check_file_size,
-            check_embedded_images,
-            check_text_boxes,
-        ]
-        for rule_fn in structural:
+        # Short-circuit: only structural checks
+        for rule_fn in _STRUCTURAL_RULES:
             result = rule_fn(resume)
             if result is not None:
                 findings.append(result)
         return findings
 
     # All rules (text-dependent + structural)
-    all_rules = [
-        check_text_quality,
-        check_tables,
-        check_multi_column,
-        check_standard_sections,
-        check_contact_info,
-        check_resume_length,
-        check_file_size,
-        check_header_footer_info,
-        check_bullet_characters,
-        check_date_consistency,
-        check_chronological_order,
-        check_embedded_images,
-        check_font_detection,
-        check_hyperlink_formatting,
-        check_text_boxes,
-    ]
-
-    for rule_fn in all_rules:
+    for rule_fn in _TEXT_DEPENDENT_RULES + _STRUCTURAL_RULES:
         result = rule_fn(resume)
         if result is not None:
             findings.append(result)
@@ -738,7 +746,7 @@ _SEVERITY_DEDUCTIONS: dict[str, int] = {
 }
 
 
-def calculate_format_score(findings: list[dict[str, Any]]) -> tuple[int, bool, bool]:
+def calculate_format_score(findings: list[Finding]) -> tuple[int, bool, bool]:
     """Calculate an ATS format compliance score from a list of findings.
 
     Args:
