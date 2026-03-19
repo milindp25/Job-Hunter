@@ -32,6 +32,7 @@ os.environ["ADZUNA_APP_KEY"] = "test-adzuna-key"
 os.environ["USAJOBS_API_KEY"] = "test-usajobs-key"
 os.environ["USAJOBS_EMAIL"] = "test@example.com"
 os.environ["APIFY_API_KEY"] = "test-apify-key"
+os.environ["GEMINI_API_KEY"] = "test-gemini-key"
 
 # Now it is safe to import the app and its dependencies.
 from app.config import get_settings  # noqa: E402
@@ -158,6 +159,31 @@ async def test_jobs(session: AsyncSession) -> list:
         jobs.append(job)
     await session.flush()
     return jobs
+
+
+@pytest_asyncio.fixture
+async def auth_headers_with_profile(client: AsyncClient, auth_headers: dict[str, str]) -> dict[str, str]:
+    """Register a test user with skills and preferences for matching tests."""
+    await client.put(
+        "/api/v1/users/me/skills",
+        headers=auth_headers,
+        json={"skills": [
+            {"name": "Python", "level": "advanced", "years": 5},
+            {"name": "React", "level": "intermediate", "years": 3},
+            {"name": "SQL", "level": "advanced", "years": 4},
+        ]},
+    )
+    await client.put(
+        "/api/v1/users/me",
+        headers=auth_headers,
+        json={
+            "desired_roles": ["Software Engineer", "Full Stack Developer"],
+            "desired_locations": ["Remote", "New York"],
+            "min_salary": 100000,
+            "years_of_experience": 5,
+        },
+    )
+    return auth_headers
 
 
 @pytest.fixture

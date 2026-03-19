@@ -3,6 +3,7 @@
 import { User, Search, FileCheck, AlertCircle } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileCompletenessCard } from "./profile-completeness-card";
+import { TopMatchesCard } from "./top-matches-card";
 import { QuickActionCard } from "./quick-action-card";
 
 function DashboardSkeleton() {
@@ -42,6 +43,8 @@ export function DashboardContent() {
       </div>
 
       <ProfileCompletenessCard completeness={completeness} />
+
+      <TopMatchesCard />
 
       {showEmptyState && (
         <div className="flex items-start gap-4 rounded-xl border border-yellow-200 bg-yellow-50 p-5 dark:border-yellow-900 dark:bg-yellow-950">

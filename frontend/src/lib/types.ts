@@ -178,3 +178,46 @@ export interface JobFetchResponse {
   total_updated_jobs: number;
   message: string;
 }
+
+export interface JobMatchScore {
+  id: string;
+  job_id: string;
+  overall_score: number;
+  keyword_score: number;
+  ai_score: number | null;
+  skills_match: number | null;
+  experience_match: number | null;
+  education_match: number | null;
+  location_match: number | null;
+  salary_match: number | null;
+  strengths: string[];
+  gaps: string[];
+  recommendation: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobMatchWithJob {
+  match: JobMatchScore;
+  job: Job;
+}
+
+export interface MatchResultsResponse {
+  matches: JobMatchWithJob[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface MatchAnalyzeResponse {
+  total_jobs_analyzed: number;
+  new_matches: number;
+  updated_matches: number;
+  top_score: number;
+  message: string;
+}
+
+export interface SingleMatchAnalyzeResponse {
+  match: JobMatchScore;
+  message: string;
+}

@@ -123,6 +123,30 @@ class JobFetchError(AppException):
         super().__init__(detail=detail, error_code="JOB_FETCH_ERROR", status_code=500)
 
 
+class GeminiAnalysisError(AppException):
+    """Raised when Gemini AI analysis fails."""
+
+    def __init__(self, detail: str = "AI analysis failed") -> None:
+        super().__init__(detail=detail, error_code="GEMINI_ANALYSIS_ERROR", status_code=500)
+
+
+class MatchNotFoundError(AppException):
+    """Raised when a requested match result does not exist."""
+
+    def __init__(self, detail: str = "Match result not found") -> None:
+        super().__init__(detail=detail, error_code="MATCH_NOT_FOUND", status_code=404)
+
+
+class ProfileIncompleteError(AppException):
+    """Raised when user profile is too incomplete for matching."""
+
+    def __init__(
+        self,
+        detail: str = "Profile is too incomplete for matching. Please add skills and experience.",
+    ) -> None:
+        super().__init__(detail=detail, error_code="PROFILE_INCOMPLETE", status_code=400)
+
+
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
     """Global exception handler that converts AppException into a structured JSON response."""
     return JSONResponse(

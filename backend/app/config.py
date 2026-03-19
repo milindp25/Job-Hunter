@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     USAJOBS_EMAIL: str = ""
     APIFY_API_KEY: str = ""  # Optional, for LinkedIn job scraping
 
+    # Gemini AI (for job matching analysis)
+    GEMINI_API_KEY: str = ""
+
     # Job fetch settings
     JOB_FETCH_COOLDOWN_MINUTES: int = 15
 
