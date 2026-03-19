@@ -14,16 +14,18 @@ interface AtsConsentModalProps {
 
 export function AtsConsentModal({ open, onOpenChange, onConsented }: AtsConsentModalProps) {
   const [accepting, setAccepting] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleAccept() {
     setAccepting(true);
+    setError(false);
     try {
       await api.patch('/users/profile', { ai_analysis_consented: true });
       onConsented();
       onOpenChange(false);
     } catch {
-      // If persist fails, still allow the user to dismiss — don't block UX
       setAccepting(false);
+      setError(true);
     }
   }
 
@@ -77,6 +79,13 @@ export function AtsConsentModal({ open, onOpenChange, onConsented }: AtsConsentM
               Your consent is saved so you won&apos;t be asked again.
             </li>
           </ul>
+
+          {/* Error feedback */}
+          {error && (
+            <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
+              Failed to save consent. Please try again.
+            </p>
+          )}
 
           {/* Actions */}
           <div className="mt-6 flex gap-3">

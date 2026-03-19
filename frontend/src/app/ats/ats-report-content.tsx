@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   FileText,
@@ -16,8 +16,8 @@ import { AtsFindingsSection } from '@/components/ats/ats-findings-section';
 import { AtsSuggestionCard } from '@/components/ats/ats-suggestion-card';
 import { AtsStaleBanner } from '@/components/ats/ats-stale-banner';
 import { AtsCheckButton } from '@/components/ats/ats-check-button';
-import { useAtsCheck, useDismissFinding } from '@/hooks/useAtsCheck';
-import type { AtsCheck, AtsFinding } from '@/lib/types';
+import { useAtsCheck, useDismissFinding, useRunAtsCheck } from '@/hooks/useAtsCheck';
+import type { AtsCheck } from '@/lib/types';
 
 // ---------------------------------------------------------------------------
 // Loading skeleton
@@ -90,15 +90,11 @@ function ReportBody({ check, onRerun }: ReportBodyProps) {
     [check.id, dismissFinding],
   );
 
-  const findingsByCategory = useCallback(
-    (category: AtsFinding['category']) =>
-      check.findings.filter((f) => f.category === category),
-    [check.findings],
-  );
-
-  const formatFindings = findingsByCategory('format');
-  const keywordFindings = findingsByCategory('keyword');
-  const contentFindings = findingsByCategory('content');
+  const { formatFindings, keywordFindings, contentFindings } = useMemo(() => ({
+    formatFindings: check.findings.filter((f) => f.category === 'format'),
+    keywordFindings: check.findings.filter((f) => f.category === 'keyword'),
+    contentFindings: check.findings.filter((f) => f.category === 'content'),
+  }), [check.findings]);
 
   return (
     <div className="space-y-8">
@@ -209,17 +205,19 @@ function ReportBody({ check, onRerun }: ReportBodyProps) {
 
 export function AtsReportContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const checkId = searchParams.get('checkId');
 
   const { check, isLoading, error } = useAtsCheck(checkId);
+  const runCheck = useRunAtsCheck();
 
-  // For re-run we just let the user click AtsCheckButton with resume from check
-  // We need a rerun handler that navigates or refreshes — simplest: page reload
   const handleRerun = useCallback(() => {
     if (!check) return;
-    // Trigger a new check with the same resume/job via the check button
-    // We surface a dedicated button instead of doing it silently
-  }, [check]);
+    runCheck.mutate(
+      { resumeId: check.resume_id, jobId: check.job_id ?? undefined },
+      { onSuccess: (result) => router.push(`/ats?checkId=${result.id}`) },
+    );
+  }, [check, runCheck, router]);
 
   return (
     <AuthGuard>
@@ -237,11 +235,7 @@ export function AtsReportContent() {
               resumeId={check.resume_id}
               jobId={check.job_id ?? undefined}
               onSuccess={(newCheck) => {
-                // Navigate to new check result
-                const url = new URL(window.location.href);
-                url.searchParams.set('checkId', newCheck.id);
-                window.history.pushState({}, '', url.toString());
-                window.location.reload();
+                router.push(`/ats?checkId=${newCheck.id}`);
               }}
             />
           )}
