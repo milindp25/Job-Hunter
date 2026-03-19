@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.exceptions import AppException, app_exception_handler
-from app.routers import auth, jobs, matching, resumes, users
+from app.routers import ats, auth, jobs, matching, resumes, users
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -76,6 +76,7 @@ app.add_exception_handler(AppException, app_exception_handler)  # type: ignore[a
 # ---------------------------------------------------------------------------
 # API v1 routers
 # ---------------------------------------------------------------------------
+app.include_router(ats.router)
 app.include_router(auth.router)
 app.include_router(jobs.router)
 app.include_router(matching.router)
