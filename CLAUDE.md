@@ -75,9 +75,9 @@ npm run dev                                 # Dev server on :3000
 ## Build Order (8 sub-projects)
 
 1. **Foundation** (DONE) — scaffolding, auth, profiles, onboarding wizard
-2. **Resume Parser & Storage** — upload, parse, store resumes; LinkedIn profile import
-3. **Job Aggregation** — connect to job APIs, fetch/store listings
-4. **Matching Engine** — NLP + Gemini scoring, rank jobs vs profiles
+2. **Resume Parser & Storage** (DONE) — upload, parse, store resumes; Cloudflare R2; LinkedIn profile import
+3. **Job Aggregation** (DONE) — RemoteOK, The Muse, Adzuna, USAJobs API clients; job search with filters
+4. **Matching Engine** (DONE) — keyword NLP scoring + Gemini 2.0 Flash deep analysis; two-layer architecture
 5. **ATS Compliance Checker** — enterprise-grade checks against real ATS systems
 6. **Resume Generator** — LaTeX templates, customization, PDF output
 7. **Resume Tailor** — modify resume to match job descriptions
