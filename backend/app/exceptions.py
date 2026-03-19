@@ -147,6 +147,46 @@ class ProfileIncompleteError(AppException):
         super().__init__(detail=detail, error_code="PROFILE_INCOMPLETE", status_code=400)
 
 
+class AtsCheckNotFoundError(AppException):
+    """Raised when an ATS check result is not found."""
+
+    def __init__(
+        self,
+        detail: str = "ATS check result not found.",
+    ) -> None:
+        super().__init__(detail=detail, error_code="ATS_CHECK_NOT_FOUND", status_code=404)
+
+
+class AtsCheckError(AppException):
+    """Raised when an ATS check fails unexpectedly."""
+
+    def __init__(
+        self,
+        detail: str = "ATS check failed. Please try again.",
+    ) -> None:
+        super().__init__(detail=detail, error_code="ATS_CHECK_ERROR", status_code=500)
+
+
+class AtsRateLimitError(AppException):
+    """Raised when user exceeds ATS check rate limit."""
+
+    def __init__(
+        self,
+        detail: str = "Rate limit exceeded. Maximum 10 full checks per hour.",
+    ) -> None:
+        super().__init__(detail=detail, error_code="ATS_RATE_LIMIT", status_code=429)
+
+
+class AtsConsentRequiredError(AppException):
+    """Raised when AI analysis is requested without user consent."""
+
+    def __init__(
+        self,
+        detail: str = "AI analysis requires your consent. Please accept the privacy notice first.",
+    ) -> None:
+        super().__init__(detail=detail, error_code="ATS_CONSENT_REQUIRED", status_code=403)
+
+
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
     """Global exception handler that converts AppException into a structured JSON response."""
     return JSONResponse(

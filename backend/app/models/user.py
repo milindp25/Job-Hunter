@@ -48,3 +48,4 @@ class UserProfile(SQLModel, table=True):
     summary: str | None = Field(default=None)
     onboarding_completed: bool = Field(default=False)
     profile_completeness: int = Field(default=0)
+    ai_analysis_consented: bool = Field(default=False)
