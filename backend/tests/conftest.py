@@ -27,6 +27,11 @@ os.environ["R2_ACCOUNT_ID"] = "test-account-id"
 os.environ["R2_ACCESS_KEY_ID"] = "test-access-key"
 os.environ["R2_SECRET_ACCESS_KEY"] = "test-secret-key"
 os.environ["R2_BUCKET_NAME"] = "test-bucket"
+os.environ["ADZUNA_APP_ID"] = "test-adzuna-id"
+os.environ["ADZUNA_APP_KEY"] = "test-adzuna-key"
+os.environ["USAJOBS_API_KEY"] = "test-usajobs-key"
+os.environ["USAJOBS_EMAIL"] = "test@example.com"
+os.environ["APIFY_API_KEY"] = "test-apify-key"
 
 # Now it is safe to import the app and its dependencies.
 from app.config import get_settings  # noqa: E402
@@ -116,6 +121,43 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
     data = response.json()
     access_token = data["access_token"]
     return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest_asyncio.fixture
+async def test_jobs(session: AsyncSession) -> list:
+    """Create test jobs in the database for job-related tests.
+
+    Returns a list of 3 Job model instances with varying attributes
+    to exercise filtering by source, job_type, is_remote, etc.
+    """
+    from datetime import UTC, datetime
+
+    from app.models.job import Job
+
+    jobs: list[Job] = []
+    for i in range(3):
+        job = Job(
+            external_id=f"test-job-{i}",
+            source="remoteok" if i < 2 else "themuse",
+            title=f"Test Job {i}" if i < 2 else "Data Analyst",
+            company=f"Company {i}",
+            location="Remote" if i == 0 else "New York" if i == 1 else None,
+            is_remote=i == 0,
+            salary_min=80000 + i * 20000,
+            salary_max=120000 + i * 20000,
+            salary_currency="USD",
+            description=f"Description for job {i}",
+            job_type="full-time" if i < 2 else "contract",
+            url=f"https://example.com/job/{i}",
+            tags=["python", "react"] if i < 2 else ["sql", "excel"],
+            raw_data={"test": True},
+            posted_at=datetime.now(UTC),
+            is_active=True,
+        )
+        session.add(job)
+        jobs.append(job)
+    await session.flush()
+    return jobs
 
 
 @pytest.fixture

@@ -119,3 +119,62 @@ export interface ResumeDownloadResponse {
   filename: string;
   expires_in: number;
 }
+
+export interface Job {
+  id: string;
+  external_id: string;
+  source: string;
+  title: string;
+  company: string;
+  location: string | null;
+  is_remote: boolean;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  description: string;
+  job_type: string;
+  url: string;
+  tags: string[];
+  posted_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobListResponse {
+  jobs: Job[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface SavedJob {
+  id: string;
+  job: Job;
+  saved_at: string;
+  notes: string | null;
+}
+
+export interface SavedJobListResponse {
+  saved_jobs: SavedJob[];
+  total: number;
+}
+
+export interface JobSearchParams {
+  query?: string;
+  location?: string;
+  salary_min?: number;
+  salary_max?: number;
+  job_type?: string;
+  source?: string;
+  is_remote?: boolean;
+  page?: number;
+  page_size?: number;
+}
+
+export interface JobFetchResponse {
+  sources_fetched: string[];
+  total_new_jobs: number;
+  total_updated_jobs: number;
+  message: string;
+}

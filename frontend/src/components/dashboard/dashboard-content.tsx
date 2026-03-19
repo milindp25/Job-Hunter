@@ -73,7 +73,7 @@ export function DashboardContent() {
           <QuickActionCard
             title="Browse Jobs"
             description="Explore job listings matched to your profile and preferences."
-            href="/dashboard"
+            href="/jobs"
             icon={Search}
           />
           <QuickActionCard

@@ -9,6 +9,7 @@ import {
   X,
   User,
   LayoutDashboard,
+  Search,
   LogOut,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -77,6 +78,15 @@ export function Header() {
                     >
                       <LayoutDashboard className="h-4 w-4" />
                       Dashboard
+                    </Link>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/jobs"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground outline-none transition-colors hover:bg-foreground/5 focus:bg-foreground/5"
+                    >
+                      <Search className="h-4 w-4" />
+                      Jobs
                     </Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-foreground/10" />
@@ -149,6 +159,14 @@ export function Header() {
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
+              </Link>
+              <Link
+                href="/jobs"
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-foreground/5"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Search className="h-4 w-4" />
+                Jobs
               </Link>
               <button
                 type="button"

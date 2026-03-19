@@ -102,6 +102,27 @@ class FileTooLargeError(AppException):
         super().__init__(detail=detail, error_code="FILE_TOO_LARGE", status_code=400)
 
 
+class JobNotFoundError(AppException):
+    """Raised when a requested job does not exist."""
+
+    def __init__(self, detail: str = "Job not found") -> None:
+        super().__init__(detail=detail, error_code="JOB_NOT_FOUND", status_code=404)
+
+
+class JobAlreadySavedError(AppException):
+    """Raised when a user tries to save a job they already saved."""
+
+    def __init__(self, detail: str = "Job is already saved") -> None:
+        super().__init__(detail=detail, error_code="JOB_ALREADY_SAVED", status_code=409)
+
+
+class JobFetchError(AppException):
+    """Raised when fetching jobs from an external API fails."""
+
+    def __init__(self, detail: str = "Failed to fetch jobs from external source") -> None:
+        super().__init__(detail=detail, error_code="JOB_FETCH_ERROR", status_code=500)
+
+
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
     """Global exception handler that converts AppException into a structured JSON response."""
     return JSONResponse(

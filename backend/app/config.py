@@ -43,6 +43,16 @@ class Settings(BaseSettings):
     R2_SECRET_ACCESS_KEY: str = ""
     R2_BUCKET_NAME: str = "job-hunter-resumes"
 
+    # Job API keys
+    ADZUNA_APP_ID: str = ""
+    ADZUNA_APP_KEY: str = ""
+    USAJOBS_API_KEY: str = ""
+    USAJOBS_EMAIL: str = ""
+    APIFY_API_KEY: str = ""  # Optional, for LinkedIn job scraping
+
+    # Job fetch settings
+    JOB_FETCH_COOLDOWN_MINUTES: int = 15
+
     # URLs
     FRONTEND_URL: str = "http://localhost:3000"
     BACKEND_URL: str = "http://localhost:8000"
