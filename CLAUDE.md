@@ -78,7 +78,7 @@ npm run dev                                 # Dev server on :3000
 2. **Resume Parser & Storage** (DONE) — upload, parse, store resumes; Cloudflare R2; LinkedIn profile import
 3. **Job Aggregation** (DONE) — RemoteOK, The Muse, Adzuna, USAJobs API clients; job search with filters
 4. **Matching Engine** (DONE) — keyword NLP scoring + Gemini 2.0 Flash deep analysis; two-layer architecture
-5. **ATS Compliance Checker** — enterprise-grade checks against real ATS systems
+5. **ATS Compliance Checker** (DONE) — enterprise-grade checks against real ATS systems
 6. **Resume Generator** — LaTeX templates, customization, PDF output
 7. **Resume Tailor** — modify resume to match job descriptions
 8. **Polish & Launch** — dashboard UX, notifications, deployment

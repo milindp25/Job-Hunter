@@ -4,13 +4,16 @@ import base64
 import json
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlmodel.ext.asyncio.session import AsyncSession  # noqa: TCH001
 
 from app.models.resume import Resume
+
+if TYPE_CHECKING:
+    from httpx import AsyncClient
+    from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 # ---------------------------------------------------------------------------
