@@ -152,7 +152,7 @@ class AtsCheckNotFoundError(AppException):
 
     def __init__(
         self,
-        detail: str = "ATS check result not found.",
+        detail: str = "ATS check result not found",
     ) -> None:
         super().__init__(detail=detail, error_code="ATS_CHECK_NOT_FOUND", status_code=404)
 
