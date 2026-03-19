@@ -19,21 +19,23 @@ from app.services.job_clients.linkedin_apify import (
 # ---------------------------------------------------------------------------
 
 def _sample_linkedin_job(**overrides: object) -> dict[str, object]:
-    """Return a realistic Apify LinkedIn job result."""
+    """Return a realistic Apify LinkedIn job result (curious_coder format)."""
     base: dict[str, object] = {
+        "id": "3847562901",
         "title": "Senior Python Developer",
         "companyName": "Acme Corp",
-        "companyUrl": "https://linkedin.com/company/acme",
+        "companyLinkedinUrl": "https://linkedin.com/company/acme",
         "location": "San Francisco, CA",
-        "description": "We are looking for a senior Python developer...",
-        "jobUrl": "https://www.linkedin.com/jobs/view/3847562901/",
+        "descriptionText": "We are looking for a senior Python developer...",
+        "link": "https://www.linkedin.com/jobs/view/3847562901/",
         "postedAt": "2026-03-15T10:00:00.000Z",
         "salary": "$120,000 - $180,000/yr",
-        "contractType": "Full-time",
+        "employmentType": "Full-time",
         "seniorityLevel": "Mid-Senior level",
         "industries": ["Technology", "Software"],
         "jobFunction": "Engineering",
-        "applicationsCount": 42,
+        "applicantsCount": 42,
+        "workRemoteAllowed": False,
     }
     base.update(overrides)
     return base
@@ -85,11 +87,15 @@ class TestIsValidJob:
 
 
 class TestExtractJobId:
-    def test_from_standard_url(self) -> None:
-        raw = {"jobUrl": "https://www.linkedin.com/jobs/view/3847562901/"}
+    def test_from_numeric_id_field(self) -> None:
+        raw = {"id": "3847562901"}
         assert _extract_job_id(raw) == "li-3847562901"
 
-    def test_from_url_without_trailing_slash(self) -> None:
+    def test_from_link_url(self) -> None:
+        raw = {"link": "https://www.linkedin.com/jobs/view/3847562901/"}
+        assert _extract_job_id(raw) == "li-3847562901"
+
+    def test_from_joburl_fallback(self) -> None:
         raw = {"jobUrl": "https://www.linkedin.com/jobs/view/3847562901"}
         assert _extract_job_id(raw) == "li-3847562901"
 
@@ -151,6 +157,10 @@ class TestNormalize:
         assert "Technology" in result["tags"]
         assert "Engineering" in result["tags"]
 
+    def test_remote_via_flag(self) -> None:
+        result = _normalize(_sample_linkedin_job(workRemoteAllowed=True))
+        assert result["is_remote"] is True
+
     def test_remote_detection_in_title(self) -> None:
         result = _normalize(_sample_linkedin_job(title="Remote Data Engineer"))
         assert result["is_remote"] is True
@@ -160,18 +170,18 @@ class TestNormalize:
         assert result["is_remote"] is True
 
     def test_internship_job_type(self) -> None:
-        result = _normalize(_sample_linkedin_job(contractType="Internship"))
+        result = _normalize(_sample_linkedin_job(employmentType="Internship"))
         assert result["job_type"] == "internship"
 
     def test_contract_job_type(self) -> None:
-        result = _normalize(_sample_linkedin_job(contractType="Contract"))
+        result = _normalize(_sample_linkedin_job(employmentType="Contract"))
         assert result["job_type"] == "contract"
 
     def test_missing_optional_fields(self) -> None:
         minimal = {
             "title": "Developer",
             "companyName": "Foo Inc",
-            "jobUrl": "https://linkedin.com/jobs/view/999999/",
+            "id": "999999",
         }
         result = _normalize(minimal)
         assert result["title"] == "Developer"

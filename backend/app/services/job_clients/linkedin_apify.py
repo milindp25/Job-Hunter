@@ -7,10 +7,12 @@ from app.services.job_clients.base import NormalizedJob
 
 log = structlog.get_logger()
 
-# Default actor — the most popular free LinkedIn Jobs Scraper on Apify.
-# Users can override via APIFY_LINKEDIN_ACTOR_ID env var if they prefer
-# a different actor (e.g., "curious_coder/linkedin-jobs-scraper").
-_DEFAULT_ACTOR_ID = "bebity/linkedin-jobs-scraper"
+# Default actor — curious_coder's LinkedIn Jobs Scraper (free with Apify credits).
+# The bebity actor ($29.99/month) is popular but paid-only after a 3-day trial.
+# Users can override via APIFY_LINKEDIN_ACTOR_ID env var.
+# NOTE: Apify API uses tilde (~) between username and actor name in URLs,
+# not slash (/). The store shows "user/actor" but the API needs "user~actor".
+_DEFAULT_ACTOR_ID = "curious_coder~linkedin-jobs-scraper"
 
 _APIFY_BASE_URL = "https://api.apify.com/v2"
 
@@ -74,10 +76,10 @@ class LinkedInApifyClient:
                 "Content-Type": "application/json",
             }
 
-            # Actor input — matches the bebity/linkedin-jobs-scraper schema.
-            # Most LinkedIn Jobs Scraper actors accept similar input fields.
+            # Actor input — matches the curious_coder/linkedin-jobs-scraper schema.
+            # This actor accepts a `urls` array and `maxItems` count.
             actor_input: dict[str, object] = {
-                "searchUrl": _build_linkedin_search_url(query, location),
+                "urls": [_build_linkedin_search_url(query, location)],
                 "maxItems": 20,
             }
 
@@ -154,30 +156,15 @@ def _is_valid_job(raw: dict[str, object]) -> bool:
     return bool(raw.get("title") and raw.get("companyName"))
 
 
-# ---------------------------------------------------------------------------
-# TODO: Normalization — this is where YOU decide how LinkedIn's rich metadata
-# maps to our common NormalizedJob format.
-#
-# LinkedIn gives us richer data than other sources:
-#   - seniorityLevel, industries, jobFunction → could become tags
-#   - applicationsCount → useful metadata
-#   - contractType → maps to job_type
-#
-# Trade-off: More tags = better ATS keyword matching, but too many
-# auto-generated tags could pollute search/filter results.
-#
-# The function signature and the fields available from Apify are set up
-# below. Fill in the mapping logic (~15 lines).
-# ---------------------------------------------------------------------------
-
-
 def _normalize(raw: dict[str, object]) -> NormalizedJob:
     """Normalize a LinkedIn job from Apify output to our common format.
 
-    Typical Apify LinkedIn job fields:
-        title, companyName, companyUrl, location, description,
-        jobUrl, postedAt, salary, contractType, seniorityLevel,
-        industries, jobFunction, applicationsCount
+    Actual curious_coder actor output fields (verified via live test):
+        id, title, companyName, companyLinkedinUrl, companyLogo,
+        location, link, descriptionText, descriptionHtml, postedAt,
+        salary, salaryInsights, employmentType, seniorityLevel,
+        industries, jobFunction, applicantsCount, workRemoteAllowed,
+        workplaceTypes, country, expireAt, postedAtTimestamp
     """
     # --- Tag assembly: include seniority + industries + jobFunction ---
     tags: list[str] = []
@@ -194,24 +181,33 @@ def _normalize(raw: dict[str, object]) -> NormalizedJob:
     # --- Location & remote detection ---
     location_str = str(raw.get("location", "")).strip() or None
     title = str(raw.get("title", "Unknown Position"))
-    is_remote = any(
+    # Prefer the explicit workRemoteAllowed flag from LinkedIn
+    is_remote = bool(raw.get("workRemoteAllowed")) or any(
         "remote" in (s or "").lower()
-        for s in (title, location_str, str(raw.get("contractType", "")))
+        for s in (title, location_str)
     )
 
     # --- Salary parsing ---
     salary_min, salary_max = _parse_salary_range(raw.get("salary"))
 
-    # --- Job type from contractType ---
-    contract = str(raw.get("contractType", "")).lower()
-    if "part" in contract:
+    # --- Job type from employmentType (curious_coder field name) ---
+    employment = str(raw.get("employmentType", "")).lower()
+    if "part" in employment:
         job_type = "part-time"
-    elif "contract" in contract or "temporary" in contract:
+    elif "contract" in employment or "temporary" in employment:
         job_type = "contract"
-    elif "intern" in contract:
+    elif "intern" in employment:
         job_type = "internship"
     else:
         job_type = "full-time"
+
+    # --- Description: prefer plain text, fall back to HTML ---
+    description = str(raw.get("descriptionText", ""))
+    if not description:
+        description = str(raw.get("description", ""))
+
+    # --- URL: curious_coder uses "link", bebity uses "jobUrl" ---
+    job_url = str(raw.get("link") or raw.get("jobUrl") or "")
 
     return NormalizedJob(
         external_id=_extract_job_id(raw),
@@ -223,9 +219,9 @@ def _normalize(raw: dict[str, object]) -> NormalizedJob:
         salary_min=salary_min,
         salary_max=salary_max,
         salary_currency="USD" if (salary_min or salary_max) else None,
-        description=str(raw.get("description", "")),
+        description=description,
         job_type=job_type,
-        url=str(raw.get("jobUrl", "")),
+        url=job_url,
         tags=tags,
         raw_data=raw,
         posted_at=str(raw.get("postedAt")) if raw.get("postedAt") else None,
@@ -238,13 +234,20 @@ def _extract_job_id(raw: dict[str, object]) -> str:
     LinkedIn job URLs contain a numeric ID: .../view/1234567890/
     We prefer this over Apify's internal IDs for deduplication.
     """
-    job_url = str(raw.get("jobUrl", ""))
-    # Extract numeric ID from URL pattern: /view/1234567890/
+    # Try the direct LinkedIn numeric ID first (curious_coder provides "id")
+    raw_id = str(raw.get("id", ""))
+    if raw_id.isdigit() and len(raw_id) >= 6:
+        return f"li-{raw_id}"
+
+    # Try extracting from URL (link or jobUrl field)
+    job_url = str(raw.get("link") or raw.get("jobUrl") or "")
     for segment in job_url.rstrip("/").split("/"):
         if segment.isdigit() and len(segment) >= 6:
             return f"li-{segment}"
+
     # Fallback to title+company hash
-    return f"li-{hash(f'{raw.get("title")}-{raw.get("companyName")}') & 0xFFFFFFFF}"
+    fallback = f'{raw.get("title")}-{raw.get("companyName")}'
+    return f"li-{hash(fallback) & 0xFFFFFFFF}"
 
 
 def _parse_salary_range(salary: object) -> tuple[int | None, int | None]:
