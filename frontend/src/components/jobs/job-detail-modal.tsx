@@ -11,7 +11,10 @@ import {
   Bookmark,
   BookmarkCheck,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { AtsCheckButton } from '@/components/ats/ats-check-button';
+import { useResumes } from '@/hooks/useResumes';
 import type { Job } from '@/lib/types';
 
 interface JobDetailModalProps {
@@ -53,6 +56,10 @@ export function JobDetailModal({
   onUnsave,
   savingId,
 }: JobDetailModalProps) {
+  const router = useRouter();
+  const { resumes } = useResumes();
+  const primaryResume = resumes.find((r) => r.is_primary) ?? resumes[0] ?? null;
+
   if (!job) return null;
 
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
@@ -163,6 +170,20 @@ export function JobDetailModal({
               )}
             </Button>
           </div>
+
+          {primaryResume && (
+            <>
+              <div className="my-4 h-px bg-foreground/10" />
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-foreground">ATS Compliance Check</h4>
+                <AtsCheckButton
+                  resumeId={primaryResume.id}
+                  jobId={job.id}
+                  onSuccess={(result) => router.push(`/ats?checkId=${result.id}`)}
+                />
+              </div>
+            </>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

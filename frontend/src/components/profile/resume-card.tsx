@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { FileText, Download, Trash2, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AtsFormatBadge } from '@/components/ats/ats-format-badge';
+import { useAtsResults } from '@/hooks/useAtsCheck';
 import { cn } from '@/lib/utils';
 import type { Resume } from '@/lib/types';
 
@@ -39,6 +42,8 @@ export function ResumeCard({
 }: ResumeCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const { checks } = useAtsResults(resume.id);
+  const latestCheck = checks[0] ?? null;
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -82,6 +87,9 @@ export function ResumeCard({
               Primary
             </span>
           )}
+          {latestCheck && (
+            <AtsFormatBadge score={latestCheck.format_score} />
+          )}
         </div>
         <p className="text-xs text-foreground/50">
           {resume.file_type.toUpperCase()} &middot; {formatFileSize(resume.file_size)} &middot;{' '}
@@ -90,6 +98,13 @@ export function ResumeCard({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        {latestCheck && (
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={`/ats?checkId=${latestCheck.id}`}>
+              ATS Report
+            </Link>
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
