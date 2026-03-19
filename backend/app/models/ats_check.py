@@ -22,7 +22,7 @@ class AtsCheck(SQLModel, table=True):
 
     check_type: str = Field(max_length=20)  # "format_only" | "full"
     prompt_version: str = Field(default="v1", max_length=10)
-    resume_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    resume_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
 
     overall_score: int = Field(default=0)
     format_score: int = Field(default=0)
@@ -40,5 +40,5 @@ class AtsCheck(SQLModel, table=True):
 
     ai_analysis_available: bool = Field(default=False)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))

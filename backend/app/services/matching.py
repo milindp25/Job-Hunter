@@ -195,7 +195,7 @@ async def run_bulk_matching(
                 kw_result.overall_score,
                 existing_match.ai_score,
             )
-            existing_match.updated_at = datetime.now(UTC)
+            existing_match.updated_at = datetime.now(UTC).replace(tzinfo=None)
             session.add(existing_match)
             updated_matches += 1
             top_score = max(top_score, existing_match.overall_score)
@@ -275,7 +275,7 @@ async def analyze_single_match(
     existing_result = await session.exec(existing_stmt)
     existing_match = existing_result.first()
 
-    freshness_cutoff = datetime.now(UTC) - timedelta(days=7)
+    freshness_cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
 
     if (
         existing_match is not None
@@ -319,7 +319,7 @@ async def analyze_single_match(
     else:
         # Update keyword score on existing match
         existing_match.keyword_score = kw_result.overall_score
-        existing_match.updated_at = datetime.now(UTC)
+        existing_match.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
     # Attempt Gemini AI analysis if configured
     if gemini_service.is_gemini_configured():
@@ -358,7 +358,7 @@ async def analyze_single_match(
                 kw_result.overall_score,
                 ai_result.overall_score,
             )
-            existing_match.updated_at = datetime.now(UTC)
+            existing_match.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
             log.info(
                 "single_match_ai_complete",

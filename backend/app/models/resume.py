@@ -21,5 +21,5 @@ class Resume(SQLModel, table=True):
     raw_text: str = Field(default="", sa_column=Column(Text, default=""))
     parsed_data: dict = Field(default_factory=dict, sa_column=Column(JSON, default={}))
     is_primary: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))

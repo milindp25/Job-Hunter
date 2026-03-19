@@ -20,8 +20,12 @@ class User(SQLModel, table=True):
     auth_provider: str = Field(default="email", max_length=20)
     auth_provider_id: str | None = Field(default=None, max_length=255)
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None),
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None),
+    )
 
 
 class UserProfile(SQLModel, table=True):

@@ -358,7 +358,7 @@ async def fetch_jobs_from_sources(
             if existing_job:
                 # Update existing job
                 _apply_normalized_job_to_model(existing_job, nj)
-                existing_job.updated_at = datetime.now(UTC)
+                existing_job.updated_at = datetime.now(UTC).replace(tzinfo=None)
                 session.add(existing_job)
                 total_updated += 1
             else:

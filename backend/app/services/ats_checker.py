@@ -57,7 +57,7 @@ async def _check_rate_limit(session: AsyncSession, user_uuid: uuid.UUID) -> None
         AtsRateLimitError: If >= RATE_LIMIT_FULL_CHECKS_PER_HOUR full checks
             were performed in the past hour.
     """
-    one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
+    one_hour_ago = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
     count_stmt = (
         select(func.count())
         .select_from(AtsCheck)
@@ -203,7 +203,7 @@ async def run_format_check(session: AsyncSession, resume: Resume) -> AtsCheck:
     elif has_critical:
         overall_score = min(overall_score, 30)
 
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).replace(tzinfo=None)
 
     existing_stmt = select(AtsCheck).where(
         AtsCheck.resume_id == resume.id,
@@ -375,7 +375,7 @@ async def run_full_check(
         elif has_critical:
             overall_score = min(overall_score, 30)
 
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).replace(tzinfo=None)
 
     existing_stmt = select(AtsCheck).where(
         AtsCheck.resume_id == resume_uuid,
@@ -541,7 +541,7 @@ async def dismiss_finding(
         updated_findings.append(finding)
 
     check.findings = updated_findings
-    check.updated_at = datetime.now(UTC)
+    check.updated_at = datetime.now(UTC).replace(tzinfo=None)
     session.add(check)
     await session.flush()
 

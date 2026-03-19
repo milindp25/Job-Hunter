@@ -32,8 +32,8 @@ class Job(SQLModel, table=True):
     raw_data: dict = Field(default_factory=dict, sa_column=Column(JSON, default={}))
     posted_at: datetime | None = Field(default=None)
     expires_at: datetime | None = Field(default=None)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
     is_active: bool = Field(default=True)
 
 
@@ -48,5 +48,5 @@ class SavedJob(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
     job_id: uuid.UUID = Field(foreign_key="jobs.id", index=True)
-    saved_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    saved_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
     notes: str | None = Field(default=None, max_length=1000)
