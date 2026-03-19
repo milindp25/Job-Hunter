@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function GoogleIcon() {
   return (
@@ -71,7 +71,7 @@ const providers: OAuthProvider[] = [
 ];
 
 function handleOAuthRedirect(provider: string) {
-  window.location.href = `${API_URL}/auth/${provider}`;
+  window.location.href = `${API_URL}/api/v1/auth/${provider}`;
 }
 
 export function OAuthButtons() {

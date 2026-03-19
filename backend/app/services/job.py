@@ -259,9 +259,9 @@ def _parse_posted_at(posted_at_str: str | None) -> datetime | None:
         return None
     try:
         dt = datetime.fromisoformat(posted_at_str)
-        # Ensure timezone-aware; assume UTC if naive
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=UTC)
+        # Convert to UTC then strip tzinfo for TIMESTAMP WITHOUT TIME ZONE columns
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(UTC).replace(tzinfo=None)
         return dt
     except (ValueError, TypeError):
         log.warning("posted_at_parse_failed", value=posted_at_str)

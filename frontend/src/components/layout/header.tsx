@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Bookmark,
   Briefcase,
   Menu,
   X,
@@ -17,6 +18,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useAuthStore } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const router = useRouter();
@@ -39,6 +41,7 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {isAuthenticated && user ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -89,6 +92,15 @@ export function Header() {
                     >
                       <Search className="h-4 w-4" />
                       Jobs
+                    </Link>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/saved-jobs"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground outline-none transition-colors hover:bg-foreground/5 focus:bg-foreground/5"
+                    >
+                      <Bookmark className="h-4 w-4" />
+                      Saved Jobs
                     </Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item asChild>
@@ -151,6 +163,10 @@ export function Header() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <nav className="border-t border-foreground/10 bg-background px-4 pb-4 pt-2 md:hidden">
+          <div className="flex items-center justify-between px-3 py-2">
+            <span className="text-sm text-foreground/60">Theme</span>
+            <ThemeToggle />
+          </div>
           {isAuthenticated && user ? (
             <div className="space-y-1">
               <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground">
@@ -187,6 +203,14 @@ export function Header() {
               >
                 <Search className="h-4 w-4" />
                 Jobs
+              </Link>
+              <Link
+                href="/saved-jobs"
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-foreground/5"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Bookmark className="h-4 w-4" />
+                Saved Jobs
               </Link>
               <Link
                 href="/ats"

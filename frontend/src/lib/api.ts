@@ -38,6 +38,7 @@ api.interceptors.request.use(
 );
 
 let isRefreshing = false;
+let refreshFailed = false;
 let failedQueue: Array<{
   resolve: (token: string | null) => void;
   reject: (error: unknown) => void;
@@ -54,6 +55,11 @@ function processQueue(error: unknown, token: string | null): void {
   failedQueue = [];
 }
 
+/** Reset the refresh-failed flag (call after a successful login). */
+export function resetRefreshState(): void {
+  refreshFailed = false;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiError>) => {
@@ -61,7 +67,8 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    // Not a 401, or already retried, or refresh already failed this session
+    if (error.response?.status !== 401 || originalRequest._retry || refreshFailed) {
       return Promise.reject(error);
     }
 
@@ -83,8 +90,10 @@ api.interceptors.response.use(
       const newToken = await refreshAccessToken();
 
       if (!newToken) {
+        refreshFailed = true;
         clearTokens();
         processQueue(new Error("Refresh failed"), null);
+
         return Promise.reject(error);
       }
 
@@ -96,6 +105,7 @@ api.interceptors.response.use(
 
       return api(originalRequest);
     } catch (refreshError) {
+      refreshFailed = true;
       processQueue(refreshError, null);
       clearTokens();
       return Promise.reject(refreshError);

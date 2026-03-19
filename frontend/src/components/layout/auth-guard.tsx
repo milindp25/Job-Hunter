@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { getAccessToken } from "@/lib/auth";
 
 function AuthGuardSkeleton() {
   return (
@@ -28,9 +29,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: authLoading, fetchUser } = useAuthStore();
   const { profile, isLoading: profileLoading } = useProfile();
 
+  const hasAttemptedFetch = useRef(false);
+
   useEffect(() => {
-    if (!isAuthenticated && !authLoading) {
-      fetchUser();
+    if (!isAuthenticated && !authLoading && !hasAttemptedFetch.current) {
+      // Only attempt to restore session if we have a stored token
+      if (getAccessToken()) {
+        hasAttemptedFetch.current = true;
+        fetchUser();
+      }
     }
   }, [isAuthenticated, authLoading, fetchUser]);
 

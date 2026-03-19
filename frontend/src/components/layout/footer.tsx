@@ -8,6 +8,12 @@ export function Footer() {
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center gap-6 text-sm text-foreground/50">
           <Link
+            href="/about"
+            className="transition-colors hover:text-foreground"
+          >
+            About
+          </Link>
+          <Link
             href="/privacy"
             className="transition-colors hover:text-foreground"
           >

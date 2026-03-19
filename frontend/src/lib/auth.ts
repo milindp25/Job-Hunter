@@ -1,25 +1,28 @@
 import type { AuthResponse } from "@/lib/types";
 
-let accessToken: string | null = null;
+const TOKEN_KEY = "jh_access_token";
 
 export function getAccessToken(): string | null {
-  return accessToken;
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 export function setAccessToken(token: string): void {
-  accessToken = token;
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
 export function clearTokens(): void {
-  accessToken = null;
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
   try {
     const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+      process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-    const response = await fetch(`${baseUrl}/auth/refresh`, {
+    const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
       method: "POST",
       credentials: "include",
       headers: {

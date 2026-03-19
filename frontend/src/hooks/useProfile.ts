@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth";
 import type {
   UserWithProfile,
   ProfileUpdatePayload,
@@ -29,6 +30,7 @@ export function useProfile() {
   } = useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: fetchUserProfile,
+    enabled: !!getAccessToken(),
   });
 
   const updateProfile = useMutation({

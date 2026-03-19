@@ -1,12 +1,20 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { TailorDiffView } from "@/components/tailor/tailor-diff-view";
 import { KeywordAnalysis } from "@/components/tailor/keyword-analysis";
 import { useTailoredResume } from "@/hooks/useTailoredResume";
+import { generateResumePdf } from "@/lib/api";
+
+const TEMPLATES = [
+  { id: "classic", label: "Classic" },
+  { id: "modern", label: "Modern" },
+  { id: "minimal", label: "Minimal" },
+] as const;
 
 interface TailorResultPageProps {
   params: Promise<{ id: string }>;
@@ -17,6 +25,28 @@ export default function TailorResultPage({ params }: TailorResultPageProps) {
   const { data: tailored, isLoading, error } = useTailoredResume(
     id === "0" ? null : id,
   );
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("classic");
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!tailored) return;
+    setIsDownloading(true);
+    try {
+      const blob = await generateResumePdf(tailored.resume_id, selectedTemplate);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tailored-resume-${selectedTemplate}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [tailored, selectedTemplate]);
 
   if (isLoading) {
     return (
@@ -73,12 +103,62 @@ export default function TailorResultPage({ params }: TailorResultPageProps) {
 
         {/* Sidebar */}
         <aside className="space-y-6">
-          <div className="sticky top-24 rounded-xl border border-foreground/10 bg-background p-6 shadow-sm">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Sparkles className="h-4 w-4 text-blue-600" />
-              Keyword Analysis
-            </h2>
-            <KeywordAnalysis tailored={tailored} />
+          <div className="sticky top-24 space-y-6">
+            <div className="rounded-xl border border-foreground/10 bg-background p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                Keyword Analysis
+              </h2>
+              <KeywordAnalysis tailored={tailored} />
+            </div>
+
+            {/* PDF Download */}
+            <div className="rounded-xl border border-foreground/10 bg-background p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Download className="h-4 w-4 text-blue-600" />
+                Download PDF
+              </h2>
+
+              <fieldset className="mb-4 space-y-2">
+                <legend className="mb-1 text-xs font-medium text-foreground/60">
+                  Template
+                </legend>
+                {TEMPLATES.map((tmpl) => (
+                  <label
+                    key={tmpl.id}
+                    className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+                  >
+                    <input
+                      type="radio"
+                      name="pdf-template"
+                      value={tmpl.id}
+                      checked={selectedTemplate === tmpl.id}
+                      onChange={() => setSelectedTemplate(tmpl.id)}
+                      className="accent-blue-600"
+                    />
+                    {tmpl.label}
+                  </label>
+                ))}
+              </fieldset>
+
+              <Button
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
+                className="w-full"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </aside>
       </div>

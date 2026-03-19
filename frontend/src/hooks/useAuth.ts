@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { api } from "@/lib/api";
+import { api, resetRefreshState } from "@/lib/api";
 import { setAccessToken, clearTokens } from "@/lib/auth";
 import type { AuthResponse, User } from "@/lib/types";
 
@@ -29,6 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         password,
       });
       setAccessToken(data.access_token);
+      resetRefreshState();
       set({ user: data.user, isAuthenticated: true, isLoading: false });
     } catch {
       set({ isLoading: false });
@@ -45,6 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         password,
       });
       setAccessToken(data.access_token);
+      resetRefreshState();
       set({ user: data.user, isAuthenticated: true, isLoading: false });
     } catch {
       set({ isLoading: false });
