@@ -22,7 +22,7 @@ class AtsFindingResponse(BaseModel):
     detail: str
     suggestion: str
     section: str | None
-    metadata: dict[str, str | int | float | bool | None]
+    metadata: dict[str, str | int | float | bool | list[int] | list[str] | None]
     dismissed: bool
 
 
