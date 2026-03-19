@@ -47,7 +47,7 @@ export function AtsSuggestionCard({ suggestion }: AtsSuggestionCardProps) {
               <span className="text-xs font-bold text-red-600 dark:text-red-400">-</span>
               <span className="text-xs font-semibold text-red-600 dark:text-red-400">Before</span>
             </div>
-            <p className="text-sm text-red-800 dark:text-red-300">{suggestion.before}</p>
+            <p className="text-sm line-through text-red-800 dark:text-red-300">{suggestion.before}</p>
           </div>
 
           {/* After */}

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   FileText,
   Hash,
@@ -63,6 +64,9 @@ function CheckNotFound() {
           The ATS check you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
         </p>
       </div>
+      <Link href="/profile" className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+        Back to Profile
+      </Link>
     </div>
   );
 }
@@ -108,6 +112,12 @@ function ReportBody({ check, onRerun }: ReportBodyProps) {
         keywordScore={check.keyword_score}
         contentScore={check.content_score}
       />
+
+      {/* Transparency disclaimer */}
+      <p className="text-xs text-muted-foreground">
+        Results are based on common ATS parsing behavior and may not reflect every system.
+        AI analysis powered by Google Gemini.
+      </p>
 
       {/* Meta info */}
       <div className="flex flex-wrap gap-3 text-xs text-foreground/40">
@@ -177,6 +187,9 @@ function ReportBody({ check, onRerun }: ReportBodyProps) {
             <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-medium text-foreground/60">
               {check.suggestions.length}
             </span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              Powered by Gemini AI
+            </span>
           </div>
           <div className="space-y-4">
             {check.suggestions.map((s, i) => (
@@ -238,8 +251,13 @@ export function AtsReportContent() {
         {isLoading && <ReportSkeleton />}
         {!isLoading && (error || !check) && !checkId && (
           <div className="rounded-xl border border-foreground/10 bg-foreground/3 px-4 py-8 text-center text-sm text-foreground/40">
-            No check selected. Provide a <code className="rounded bg-foreground/10 px-1">checkId</code>{' '}
-            query parameter to view a report.
+            <p>
+              No check selected. Provide a <code className="rounded bg-foreground/10 px-1">checkId</code>{' '}
+              query parameter to view a report.
+            </p>
+            <Link href="/profile" className="mt-3 inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+              Back to Profile
+            </Link>
           </div>
         )}
         {!isLoading && (error || !check) && checkId && <CheckNotFound />}
