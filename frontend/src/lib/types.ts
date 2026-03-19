@@ -221,3 +221,51 @@ export interface SingleMatchAnalyzeResponse {
   match: JobMatchScore;
   message: string;
 }
+
+// -- ATS Compliance Checker --
+
+export interface AtsFinding {
+  id: string;
+  category: 'format' | 'keyword' | 'content';
+  severity: 'blocker' | 'critical' | 'warning' | 'info';
+  confidence: 'high' | 'medium' | 'low';
+  rule_id: string;
+  title: string;
+  detail: string;
+  suggestion: string;
+  section: string | null;
+  metadata: Record<string, string | number | boolean | null>;
+  dismissed: boolean;
+}
+
+export interface AtsSuggestion {
+  section: string;
+  before: string;
+  after: string;
+  reason: string;
+  estimated_impact: string;
+}
+
+export interface AtsCheck {
+  id: string;
+  resume_id: string;
+  job_id: string | null;
+  check_type: 'format_only' | 'full';
+  overall_score: number;
+  format_score: number;
+  keyword_score: number | null;
+  content_score: number | null;
+  findings: AtsFinding[];
+  suggestions: AtsSuggestion[];
+  ai_analysis_available: boolean;
+  is_stale: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AtsCheckListResponse {
+  checks: AtsCheck[];
+  total: number;
+  page: number;
+  page_size: number;
+}
