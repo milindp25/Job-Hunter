@@ -22,6 +22,7 @@ dependencies = [
     "redis[hiredis]>=5.2.0",
     "boto3>=1.35.0",
     "google-generativeai>=0.8.0",
+    "reportlab>=4.0",
 ]
 
 [project.optional-dependencies]

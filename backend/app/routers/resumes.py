@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid as _uuid
 from typing import TYPE_CHECKING
 
 import structlog
@@ -13,6 +14,8 @@ from app.schemas.resume import (
     ResumeUploadResponse,
 )
 from app.services import resume as resume_service
+from app.services.resume_generator import ResumeGeneratorService
+from app.services.resume_templates import TemplateRegistry
 
 if TYPE_CHECKING:
     from sqlmodel.ext.asyncio.session import AsyncSession
@@ -20,6 +23,8 @@ if TYPE_CHECKING:
 log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1/resumes", tags=["resumes"])
+
+_generator = ResumeGeneratorService()
 
 
 # ---------------------------------------------------------------------------
@@ -79,6 +84,41 @@ async def list_resumes_endpoint(
     return ResumeListResponse(
         resumes=[_resume_response_from_model(r) for r in resumes],
         total=len(resumes),
+    )
+
+
+@router.get("/templates")
+async def list_resume_templates() -> dict[str, list[dict[str, str]]]:
+    """List available resume PDF templates."""
+    templates = TemplateRegistry.list_templates()
+    return {"templates": templates}
+
+
+@router.get("/{resume_id}/generate")
+async def generate_resume_pdf(
+    resume_id: str,
+    template: str = "classic",
+    accent_color: str | None = None,
+    current_user: dict[str, str | int] = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Generate a PDF resume from stored resume data."""
+    user_id = _uuid.UUID(str(current_user["sub"]))
+    rid = _uuid.UUID(resume_id)
+
+    pdf_bytes = await _generator.generate_pdf(
+        session=session,
+        user_id=user_id,
+        resume_id=rid,
+        template_id=template,
+        accent_color=accent_color,
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="resume_{resume_id}_{template}.pdf"',
+        },
     )
 
 

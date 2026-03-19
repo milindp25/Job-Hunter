@@ -2,19 +2,25 @@
 
 import { User, Search, FileCheck, AlertCircle } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { useDashboard } from "@/hooks/useDashboard";
 import { ProfileCompletenessCard } from "./profile-completeness-card";
-import { TopMatchesCard } from "./top-matches-card";
 import { QuickActionCard } from "./quick-action-card";
+import { StatsGrid } from "./stats-grid";
+import { ActivityChart } from "./activity-chart";
+import { RecentMatches } from "./recent-matches";
 
 function DashboardSkeleton() {
   return (
     <div className="space-y-8" role="status">
       <div className="h-8 w-64 animate-pulse rounded-lg bg-foreground/10" />
-      <div className="h-24 w-full animate-pulse rounded-xl bg-foreground/10" />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="h-36 animate-pulse rounded-xl bg-foreground/10" />
-        <div className="h-36 animate-pulse rounded-xl bg-foreground/10" />
-        <div className="h-36 animate-pulse rounded-xl bg-foreground/10" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-foreground/10" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="h-64 animate-pulse rounded-xl bg-foreground/10 lg:col-span-2" />
+        <div className="h-64 animate-pulse rounded-xl bg-foreground/10" />
       </div>
       <span className="sr-only">Loading dashboard...</span>
     </div>
@@ -22,9 +28,10 @@ function DashboardSkeleton() {
 }
 
 export function DashboardContent() {
-  const { user, profile, isLoading } = useProfile();
+  const { user, profile, isLoading: profileLoading } = useProfile();
+  const { stats } = useDashboard();
 
-  if (isLoading) {
+  if (profileLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -33,6 +40,7 @@ export function DashboardContent() {
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
           Welcome back, {user?.full_name ?? "there"}!
@@ -42,10 +50,10 @@ export function DashboardContent() {
         </p>
       </div>
 
-      <ProfileCompletenessCard completeness={completeness} />
+      {/* Stats Grid */}
+      <StatsGrid stats={stats} />
 
-      <TopMatchesCard />
-
+      {/* Profile incomplete warning */}
       {showEmptyState && (
         <div className="flex items-start gap-4 rounded-xl border border-yellow-200 bg-yellow-50 p-5 dark:border-yellow-900 dark:bg-yellow-950">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600 dark:text-yellow-400" />
@@ -61,30 +69,46 @@ export function DashboardContent() {
         </div>
       )}
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-foreground">
-          Quick Actions
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <QuickActionCard
-            title="Complete Your Profile"
-            description="Add your skills, experience, and preferences to improve your matches."
-            href="/profile"
-            icon={User}
-            variant="primary"
-          />
-          <QuickActionCard
-            title="Browse Jobs"
-            description="Explore job listings matched to your profile and preferences."
-            href="/jobs"
-            icon={Search}
-          />
-          <QuickActionCard
-            title="Check ATS Score"
-            description="Analyze your resume against job descriptions for compatibility."
-            href="/dashboard"
-            icon={FileCheck}
-          />
+      {/* Middle row: Activity Chart + Profile Completeness */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ActivityChart data={stats?.weekly_activity ?? []} />
+        </div>
+        <div>
+          <ProfileCompletenessCard completeness={completeness} />
+        </div>
+      </div>
+
+      {/* Bottom row: Recent Matches + Quick Actions */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <RecentMatches matches={stats?.recent_matches ?? []} />
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Quick Actions
+          </h2>
+          <div className="flex flex-col gap-4">
+            <QuickActionCard
+              title="Complete Your Profile"
+              description="Add skills, experience, and preferences."
+              href="/profile"
+              icon={User}
+              variant="primary"
+            />
+            <QuickActionCard
+              title="Browse Jobs"
+              description="Explore matched job listings."
+              href="/jobs"
+              icon={Search}
+            />
+            <QuickActionCard
+              title="Check ATS Score"
+              description="Analyze resume compatibility."
+              href="/ats"
+              icon={FileCheck}
+            />
+          </div>
         </div>
       </div>
     </div>

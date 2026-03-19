@@ -9,7 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.exceptions import AppException, app_exception_handler
-from app.routers import ats, auth, jobs, matching, resumes, users
+from app.routers import (
+    ats,
+    auth,
+    dashboard,
+    health,
+    jobs,
+    matching,
+    resumes,
+    tailored_resumes,
+    users,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -78,17 +88,10 @@ app.add_exception_handler(AppException, app_exception_handler)  # type: ignore[a
 # ---------------------------------------------------------------------------
 app.include_router(ats.router)
 app.include_router(auth.router)
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(jobs.router)
 app.include_router(matching.router)
 app.include_router(resumes.router)
+app.include_router(tailored_resumes.router)
 app.include_router(users.router)
-
-# ---------------------------------------------------------------------------
-# Health check
-# ---------------------------------------------------------------------------
-
-
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Return application health status."""
-    return {"status": "healthy", "version": "1.0.0"}

@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AtsCheckButton } from '@/components/ats/ats-check-button';
+import { TailorButton } from '@/components/tailor/tailor-button';
 import { useResumes } from '@/hooks/useResumes';
 import type { Job } from '@/lib/types';
 
@@ -174,13 +175,22 @@ export function JobDetailModal({
           {primaryResume && (
             <>
               <div className="my-4 h-px bg-foreground/10" />
-              <div>
-                <h4 className="mb-2 text-sm font-semibold text-foreground">ATS Compliance Check</h4>
-                <AtsCheckButton
-                  resumeId={primaryResume.id}
-                  jobId={job.id}
-                  onSuccess={(result) => router.push(`/ats?checkId=${result.id}`)}
-                />
+              <div className="flex items-center gap-3">
+                <div>
+                  <h4 className="mb-2 text-sm font-semibold text-foreground">ATS Compliance Check</h4>
+                  <AtsCheckButton
+                    resumeId={primaryResume.id}
+                    jobId={job.id}
+                    onSuccess={(result) => router.push(`/ats?checkId=${result.id}`)}
+                  />
+                </div>
+                <div>
+                  <h4 className="mb-2 text-sm font-semibold text-foreground">Tailor Resume</h4>
+                  <TailorButton
+                    resumeId={primaryResume.id}
+                    jobId={job.id}
+                  />
+                </div>
               </div>
             </>
           )}

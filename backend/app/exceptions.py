@@ -23,6 +23,20 @@ class AppException(Exception):  # noqa: N818
         super().__init__(detail)
 
 
+class NotFoundError(AppException):
+    """Generic not-found exception for any resource."""
+
+    def __init__(self, detail: str = "Resource not found") -> None:
+        super().__init__(detail=detail, error_code="NOT_FOUND", status_code=404)
+
+
+class ValidationError(AppException):
+    """Generic validation error for invalid input."""
+
+    def __init__(self, detail: str = "Validation error") -> None:
+        super().__init__(detail=detail, error_code="VALIDATION_ERROR", status_code=400)
+
+
 class UserNotFoundError(AppException):
     """Raised when a requested user does not exist."""
 

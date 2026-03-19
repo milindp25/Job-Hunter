@@ -269,3 +269,63 @@ export interface AtsCheckListResponse {
   page: number;
   page_size: number;
 }
+
+// -- Resume Generator --
+
+export interface ResumeTemplate {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface ResumeTemplatesResponse {
+  templates: ResumeTemplate[];
+}
+
+// -- Tailored Resume --
+
+export interface TailoredResume {
+  id: string;
+  resume_id: string;
+  job_id: string;
+  tailored_summary: string | null;
+  tailored_experience: Record<string, unknown>[];
+  tailored_skills: string[];
+  keyword_matches: string[];
+  keyword_gaps: string[];
+  match_score_before: number | null;
+  match_score_after: number | null;
+  ai_model: string;
+  created_at: string;
+}
+
+export interface TailoredResumeListResponse {
+  items: TailoredResume[];
+  total: number;
+}
+
+
+// -- Dashboard --
+
+export interface DashboardStats {
+  total_saved_jobs: number;
+  total_matches: number;
+  resumes_count: number;
+  avg_match_score: number | null;
+  avg_ats_score: number | null;
+  recent_matches: RecentMatch[];
+  weekly_activity: ActivityPoint[];
+}
+
+export interface RecentMatch {
+  job_title: string;
+  company: string;
+  score: number;
+  matched_at: string | null;
+}
+
+export interface ActivityPoint {
+  date: string;
+  matches: number;
+  saved: number;
+}

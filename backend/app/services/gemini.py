@@ -97,6 +97,46 @@ async def _call_gemini_with_retry(
     ) from last_exc
 
 
+async def generate_json(prompt: str, schema_hint: str = "") -> dict[str, object]:
+    """Send a prompt to Gemini and parse the JSON response.
+
+    Generic helper used by services that need structured JSON from Gemini.
+
+    Args:
+        prompt: The full prompt text.
+        schema_hint: Optional hint for logging (not sent to the model).
+
+    Returns:
+        Parsed JSON response as a dictionary.
+
+    Raises:
+        GeminiAnalysisError: If the API call or JSON parsing fails.
+    """
+    import google.generativeai as genai
+
+    settings = get_settings()
+    if not settings.GEMINI_API_KEY:
+        raise GeminiAnalysisError(detail="Gemini API key is not configured")
+
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = await _call_gemini_with_retry(model, prompt)
+        text = response.text  # type: ignore[union-attr]
+        data: dict[str, object] = json.loads(text)
+        log.info("gemini_generate_json_complete", schema_hint=schema_hint)
+        return data
+    except json.JSONDecodeError as exc:
+        log.error("gemini_json_parse_error", schema_hint=schema_hint)
+        raise GeminiAnalysisError(detail=f"Failed to parse Gemini JSON response: {exc}") from exc
+    except GeminiAnalysisError:
+        raise
+    except Exception as exc:
+        log.exception("gemini_generate_json_failed", schema_hint=schema_hint, error=str(exc))
+        raise GeminiAnalysisError(detail=f"Gemini analysis failed: {exc}") from None
+
+
 async def analyze_job_match(
     profile_summary: str,
     resume_text: str,

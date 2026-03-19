@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Search,
   ShieldCheck,
+  Sparkles,
   LogOut,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -99,6 +100,15 @@ export function Header() {
                       ATS Check
                     </Link>
                   </DropdownMenu.Item>
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/tailor/0"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground outline-none transition-colors hover:bg-foreground/5 focus:bg-foreground/5"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Tailor
+                    </Link>
+                  </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-foreground/10" />
                   <DropdownMenu.Item
                     className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 outline-none transition-colors hover:bg-red-50 focus:bg-red-50 dark:hover:bg-red-950 dark:focus:bg-red-950"
@@ -185,6 +195,14 @@ export function Header() {
               >
                 <ShieldCheck className="h-4 w-4" />
                 ATS Check
+              </Link>
+              <Link
+                href="/tailor/0"
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-foreground/5"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Sparkles className="h-4 w-4" />
+                Tailor
               </Link>
               <button
                 type="button"
