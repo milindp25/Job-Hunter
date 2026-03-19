@@ -38,7 +38,6 @@ log = structlog.get_logger()
 # ---------------------------------------------------------------------------
 
 RATE_LIMIT_FULL_CHECKS_PER_HOUR = 10
-MAX_CHECKS_PER_COMBO = 3
 PROMPT_VERSION = "v1"
 
 
@@ -65,7 +64,7 @@ async def _check_rate_limit(session: AsyncSession, user_uuid: uuid.UUID) -> None
         .where(
             AtsCheck.user_id == user_uuid,
             AtsCheck.check_type == "full",
-            AtsCheck.created_at >= one_hour_ago,
+            AtsCheck.updated_at >= one_hour_ago,
         )
     )
     count_result = await session.exec(count_stmt)
@@ -174,42 +173,6 @@ async def _get_format_results(
     ]
     return findings, fresh_check.format_score
 
-
-async def _cleanup_old_checks(
-    session: AsyncSession,
-    resume_uuid: uuid.UUID,
-    job_uuid: uuid.UUID,
-) -> None:
-    """Delete checks older than the latest MAX_CHECKS_PER_COMBO for a combo.
-
-    Keeps the most recent MAX_CHECKS_PER_COMBO full checks for a given
-    (resume_id, job_id) pair and deletes any older ones.
-
-    Args:
-        session: Async database session.
-        resume_uuid: UUID of the resume.
-        job_uuid: UUID of the job.
-    """
-    all_stmt = (
-        select(AtsCheck)
-        .where(
-            AtsCheck.resume_id == resume_uuid,
-            AtsCheck.job_id == job_uuid,
-        )
-        .order_by(col(AtsCheck.created_at).desc())
-    )
-    all_result = await session.exec(all_stmt)
-    checks = list(all_result.all())
-
-    if len(checks) > MAX_CHECKS_PER_COMBO:
-        for old_check in checks[MAX_CHECKS_PER_COMBO:]:
-            await session.delete(old_check)
-        log.info(
-            "ats_old_checks_cleaned",
-            resume_id=str(resume_uuid),
-            job_id=str(job_uuid),
-            deleted=len(checks) - MAX_CHECKS_PER_COMBO,
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -342,6 +305,7 @@ async def run_full_check(
     keyword_score: int | None = None
     content_score: int | None = None
     all_findings: list[dict[str, object]] = [dict(f) for f in format_findings]  # type: ignore[misc]
+    all_suggestions: list[dict[str, object]] = []
     ai_analysis_available = False
 
     try:
@@ -374,7 +338,9 @@ async def run_full_check(
             merged.setdefault("dismissed", False)
             all_findings.append(merged)
 
-        overall_score = int(
+        all_suggestions = [dict(s) for s in ai_result.suggestions]
+
+        overall_score = round(
             format_score * 0.3 + keyword_score * 0.4 + content_score * 0.3
         )
 
@@ -427,6 +393,7 @@ async def run_full_check(
         check.content_score = content_score
         check.overall_score = overall_score
         check.findings = all_findings
+        check.suggestions = all_suggestions
         check.ai_analysis_available = ai_analysis_available
         check.updated_at = now
     else:
@@ -442,11 +409,11 @@ async def run_full_check(
             content_score=content_score,
             overall_score=overall_score,
             findings=all_findings,
+            suggestions=all_suggestions,
             ai_analysis_available=ai_analysis_available,
         )
 
     session.add(check)
-    await _cleanup_old_checks(session, resume_uuid, job_uuid)
     await session.flush()
 
     return check
