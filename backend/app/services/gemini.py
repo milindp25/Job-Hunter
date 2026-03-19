@@ -82,6 +82,13 @@ async def _call_gemini_with_retry(
                 await asyncio.sleep(wait)
                 last_exc = exc
                 continue
+            if is_rate_limit:
+                log.warning(
+                    "gemini_rate_limit_exhausted",
+                    attempt=attempt + 1,
+                    max_retries=max_retries,
+                    error=str(exc),
+                )
             last_exc = exc
             break
 
@@ -294,6 +301,18 @@ def _build_ats_prompt(
     skills = parsed_data.get("skills", [])
     skills_str = ", ".join(str(s) for s in skills) if skills else "Not extracted"  # type: ignore[union-attr]
 
+    experience = parsed_data.get("experience", [])
+    experience_lines: list[str] = []
+    for entry in experience if isinstance(experience, list) else []:  # type: ignore[union-attr]
+        if isinstance(entry, dict):
+            title = entry.get("title", "")
+            company = entry.get("company", "")
+            desc = entry.get("description", "")
+            experience_lines.append(f"- {title} at {company}: {str(desc)[:200]}")
+    experience_str = "\n".join(experience_lines) if experience_lines else "Not extracted"
+
+    summary = str(parsed_data.get("summary", "")) or "Not extracted"
+
     return f"""You are an expert ATS (Applicant Tracking System) compliance analyst. \
 Analyze this resume against the job posting for keyword and content quality.
 
@@ -302,6 +321,9 @@ Analyze this resume against the job posting for keyword and content quality.
 
 ## PARSED RESUME DATA
 - Skills detected: {skills_str}
+- Summary: {summary}
+- Experience:
+{experience_str}
 
 ## JOB POSTING
 **Title:** {job_title}
@@ -334,6 +356,7 @@ Return a JSON object with this exact structure:
       {{
         "rule_id": "missing_keyword",
         "severity": "warning",
+        "confidence": "high",
         "title": "Missing keyword: <name>",
         "detail": "Job mentions <name> N times but it does not appear in the resume.",
         "suggestion": "Add <name> to the skills section or relevant experience bullet.",
@@ -348,6 +371,7 @@ Return a JSON object with this exact structure:
       {{
         "rule_id": "vague_language",
         "severity": "warning",
+        "confidence": "high",
         "title": "Generic phrasing detected",
         "detail": "'Responsible for managing team of 5...'",
         "suggestion": "Use action verbs with quantified results, e.g. 'Led a 5-person team...'",
@@ -371,6 +395,14 @@ Return a JSON object with this exact structure:
 Be specific and actionable. Base findings on actual evidence from the resume and job description."""
 
 
+def _clamp_score(value: object) -> int:
+    """Clamp a value to a 0-100 integer."""
+    try:
+        return max(0, min(100, int(value)))  # type: ignore[arg-type]
+    except (ValueError, TypeError):
+        return 0
+
+
 def _parse_gemini_response(response_text: str) -> GeminiMatchResult:
     """Parse JSON response from Gemini into a GeminiMatchResult."""
     try:
@@ -378,14 +410,6 @@ def _parse_gemini_response(response_text: str) -> GeminiMatchResult:
     except json.JSONDecodeError:
         log.warning("gemini_response_not_json", response_text=response_text[:200])
         return GeminiMatchResult()  # Return defaults on parse failure
-
-    def _clamp_score(value: object) -> int:
-        """Clamp a value to 0-100 integer."""
-        try:
-            score = int(value)  # type: ignore[arg-type]
-            return max(0, min(100, score))
-        except (ValueError, TypeError):
-            return 0
 
     return GeminiMatchResult(
         overall_score=_clamp_score(data.get("overall_score", 0)),
@@ -407,14 +431,6 @@ def _parse_ats_response(response_text: str) -> GeminiAtsResult:
     except json.JSONDecodeError:
         log.warning("gemini_ats_response_not_json", response_text=response_text[:200])
         return GeminiAtsResult()
-
-    def _clamp_score(value: object) -> int:
-        """Clamp a value to 0-100 integer."""
-        try:
-            score = int(value)  # type: ignore[arg-type]
-            return max(0, min(100, score))
-        except (ValueError, TypeError):
-            return 0
 
     keyword_analysis = data.get("keyword_analysis", {})
     content_analysis = data.get("content_analysis", {})
