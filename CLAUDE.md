@@ -79,9 +79,9 @@ npm run dev                                 # Dev server on :3000
 3. **Job Aggregation** (DONE) — RemoteOK, The Muse, Adzuna, USAJobs API clients; job search with filters
 4. **Matching Engine** (DONE) — keyword NLP scoring + Gemini 2.0 Flash deep analysis; two-layer architecture
 5. **ATS Compliance Checker** (DONE) — enterprise-grade checks against real ATS systems
-6. **Resume Generator** — LaTeX templates, customization, PDF output
-7. **Resume Tailor** — modify resume to match job descriptions
-8. **Polish & Launch** — dashboard UX, notifications, deployment
+6. **Resume Generator** (DONE) — ReportLab PDF generation with 3 templates (Classic, Modern, Minimal); template picker UI
+7. **Resume Tailor** (DONE) — Gemini-powered resume tailoring; non-destructive TailoredResume model; diff visualization
+8. **Polish & Launch** (DONE) — dashboard stats with Recharts; privacy/terms pages; health check endpoint; error boundaries; .env.example
 
 ## Environment
 
