@@ -83,12 +83,6 @@ const stats = [
   },
 ] as const;
 
-const footerLinks = [
-  { label: "About", href: "/about" },
-  { label: "Features", href: "#features" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "Terms", href: "/terms" },
-] as const;
 
 export default function HomePage() {
   return (
@@ -255,45 +249,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-foreground/10 bg-slate-50 dark:bg-foreground/[0.02]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-8 sm:flex-row sm:justify-between">
-            {/* Brand */}
-            <div className="text-center sm:text-left">
-              <p className="text-lg font-bold text-foreground">Job Hunter</p>
-              <p className="mt-1 text-sm text-foreground/50">
-                AI-powered job matching platform
-              </p>
-            </div>
-
-            {/* Links */}
-            <nav className="flex flex-wrap justify-center gap-6" aria-label="Footer">
-              {footerLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm text-foreground/50 transition-colors hover:text-foreground"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Badge */}
-            <div className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
-              <Sparkles className="h-3 w-3" />
-              Built with AI
-            </div>
-          </div>
-
-          <div className="mt-8 border-t border-foreground/10 pt-6 text-center">
-            <p className="text-sm text-foreground/40">
-              &copy; {new Date().getFullYear()} Job Hunter. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
