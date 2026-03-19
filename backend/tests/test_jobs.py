@@ -413,6 +413,7 @@ class TestFetchJobs:
     """Tests for POST /api/v1/jobs/fetch (authenticated, mocked API clients)."""
 
     @pytest.mark.asyncio
+    @patch("app.services.job.LinkedInApifyClient")
     @patch("app.services.job.USAJobsClient")
     @patch("app.services.job.AdzunaClient")
     @patch("app.services.job.TheMuseClient")
@@ -423,6 +424,7 @@ class TestFetchJobs:
         mock_muse_cls: MagicMock,
         mock_adzuna_cls: MagicMock,
         mock_usajobs_cls: MagicMock,
+        mock_linkedin_cls: MagicMock,
         client: AsyncClient,
         auth_headers: dict[str, str],
     ) -> None:
@@ -433,6 +435,7 @@ class TestFetchJobs:
         mock_muse_cls.return_value = _mock_unconfigured_client("themuse")
         mock_adzuna_cls.return_value = _mock_unconfigured_client("adzuna")
         mock_usajobs_cls.return_value = _mock_unconfigured_client("usajobs")
+        mock_linkedin_cls.return_value = _mock_unconfigured_client("linkedin")
 
         response = await client.post(
             "/api/v1/jobs/fetch?query=python", headers=auth_headers
@@ -443,6 +446,7 @@ class TestFetchJobs:
         assert data["total_new_jobs"] == 1
 
     @pytest.mark.asyncio
+    @patch("app.services.job.LinkedInApifyClient")
     @patch("app.services.job.USAJobsClient")
     @patch("app.services.job.AdzunaClient")
     @patch("app.services.job.TheMuseClient")
@@ -453,6 +457,7 @@ class TestFetchJobs:
         mock_muse_cls: MagicMock,
         mock_adzuna_cls: MagicMock,
         mock_usajobs_cls: MagicMock,
+        mock_linkedin_cls: MagicMock,
         client: AsyncClient,
         auth_headers: dict[str, str],
     ) -> None:
@@ -467,6 +472,7 @@ class TestFetchJobs:
         )
         mock_adzuna_cls.return_value = _mock_unconfigured_client("adzuna")
         mock_usajobs_cls.return_value = _mock_unconfigured_client("usajobs")
+        mock_linkedin_cls.return_value = _mock_unconfigured_client("linkedin")
 
         response = await client.post(
             "/api/v1/jobs/fetch?query=dev", headers=auth_headers
@@ -477,6 +483,7 @@ class TestFetchJobs:
         assert data["total_new_jobs"] == 2
 
     @pytest.mark.asyncio
+    @patch("app.services.job.LinkedInApifyClient")
     @patch("app.services.job.USAJobsClient")
     @patch("app.services.job.AdzunaClient")
     @patch("app.services.job.TheMuseClient")
@@ -487,11 +494,16 @@ class TestFetchJobs:
         mock_muse_cls: MagicMock,
         mock_adzuna_cls: MagicMock,
         mock_usajobs_cls: MagicMock,
+        mock_linkedin_cls: MagicMock,
         client: AsyncClient,
         auth_headers: dict[str, str],
     ) -> None:
         """When no sources are configured, the fetch should return 500."""
-        for mock_cls in [mock_remoteok_cls, mock_muse_cls, mock_adzuna_cls, mock_usajobs_cls]:
+        all_mocks = [
+            mock_remoteok_cls, mock_muse_cls, mock_adzuna_cls,
+            mock_usajobs_cls, mock_linkedin_cls,
+        ]
+        for mock_cls in all_mocks:
             mock_cls.return_value = _mock_unconfigured_client()
 
         response = await client.post(
@@ -500,6 +512,7 @@ class TestFetchJobs:
         assert response.status_code == 500
 
     @pytest.mark.asyncio
+    @patch("app.services.job.LinkedInApifyClient")
     @patch("app.services.job.USAJobsClient")
     @patch("app.services.job.AdzunaClient")
     @patch("app.services.job.TheMuseClient")
@@ -510,6 +523,7 @@ class TestFetchJobs:
         mock_muse_cls: MagicMock,
         mock_adzuna_cls: MagicMock,
         mock_usajobs_cls: MagicMock,
+        mock_linkedin_cls: MagicMock,
         client: AsyncClient,
         auth_headers: dict[str, str],
     ) -> None:
@@ -521,6 +535,7 @@ class TestFetchJobs:
         mock_muse_cls.return_value = _mock_unconfigured_client("themuse")
         mock_adzuna_cls.return_value = _mock_unconfigured_client("adzuna")
         mock_usajobs_cls.return_value = _mock_unconfigured_client("usajobs")
+        mock_linkedin_cls.return_value = _mock_unconfigured_client("linkedin")
 
         fetch_resp = await client.post(
             "/api/v1/jobs/fetch?query=engineer", headers=auth_headers

@@ -13,6 +13,7 @@ from app.exceptions import JobAlreadySavedError, JobFetchError, JobNotFoundError
 from app.models.job import Job, SavedJob
 from app.services.job_clients import (
     AdzunaClient,
+    LinkedInApifyClient,
     RemoteOKClient,
     TheMuseClient,
     USAJobsClient,
@@ -324,6 +325,9 @@ async def fetch_jobs_from_sources(
         USAJobsClient(
             api_key=settings.USAJOBS_API_KEY,
             email=settings.USAJOBS_EMAIL,
+        ),
+        LinkedInApifyClient(
+            api_key=settings.APIFY_API_KEY,
         ),
     ]
 
