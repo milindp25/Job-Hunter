@@ -20,7 +20,7 @@ export function AtsConsentModal({ open, onOpenChange, onConsented }: AtsConsentM
     setAccepting(true);
     setError(false);
     try {
-      await api.patch('/users/profile', { ai_analysis_consented: true });
+      await api.put('/users/me', { ai_analysis_consented: true });
       onConsented();
       onOpenChange(false);
     } catch {

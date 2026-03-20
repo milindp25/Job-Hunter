@@ -42,6 +42,7 @@ class ProfileUpdateRequest(BaseModel):
     desired_locations: list[str] | None = None
     min_salary: int | None = None
     summary: str | None = None
+    ai_analysis_consented: bool | None = None
 
 
 class SkillItem(BaseModel):
