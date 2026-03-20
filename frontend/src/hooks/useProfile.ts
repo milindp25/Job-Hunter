@@ -22,16 +22,24 @@ async function fetchUserProfile(): Promise<UserWithProfile> {
 export function useProfile() {
   const queryClient = useQueryClient();
 
+  const hasToken = !!getAccessToken();
+
   const {
     data,
-    isLoading,
+    isLoading: queryLoading,
     error,
     refetch,
   } = useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: fetchUserProfile,
-    enabled: !!getAccessToken(),
+    enabled: hasToken,
   });
+
+  // When disabled (no token), TanStack Query v5 reports status "pending"
+  // (isLoading = true) because the query never ran. We must not treat that
+  // as a real loading state — only show loading when the query is actually
+  // enabled AND still fetching.
+  const isLoading = hasToken && queryLoading;
 
   const updateProfile = useMutation({
     mutationFn: async (payload: ProfileUpdatePayload) => {

@@ -50,7 +50,7 @@ export function Header() {
                   className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                    {user.full_name
+                    {(user.full_name ?? "U")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
@@ -171,14 +171,14 @@ export function Header() {
             <div className="space-y-1">
               <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                  {user.full_name
+                  {(user.full_name ?? "U")
                     .split(" ")
                     .map((n) => n[0])
                     .join("")
                     .toUpperCase()
                     .slice(0, 2)}
                 </span>
-                <span>{user.full_name}</span>
+                <span>{user.full_name ?? "User"}</span>
               </div>
               <Link
                 href="/profile"

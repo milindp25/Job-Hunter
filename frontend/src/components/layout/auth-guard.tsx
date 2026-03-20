@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { getAccessToken } from "@/lib/auth";
+import { api } from "@/lib/api";
 
 function AuthGuardSkeleton() {
   return (
@@ -45,7 +46,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (authLoading || profileLoading) return;
 
     if (!isAuthenticated) {
-      router.replace("/login");
+      // Call logout to clear the httpOnly refresh_token cookie.
+      // Without this, the proxy sees the stale cookie and redirects
+      // /login back to /dashboard, creating an infinite bounce.
+      api.post("/auth/logout").catch(() => {}).finally(() => {
+        router.replace("/login");
+      });
       return;
     }
 
