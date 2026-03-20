@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Download, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AuthGuard } from "@/components/layout/auth-guard";
 import { TailorDiffView } from "@/components/tailor/tailor-diff-view";
 import { KeywordAnalysis } from "@/components/tailor/keyword-analysis";
 import { useTailoredResume } from "@/hooks/useTailoredResume";
@@ -22,6 +23,15 @@ interface TailorResultPageProps {
 
 export default function TailorResultPage({ params }: TailorResultPageProps) {
   const { id } = use(params);
+
+  return (
+    <AuthGuard>
+      <TailorResultContent id={id} />
+    </AuthGuard>
+  );
+}
+
+function TailorResultContent({ id }: { id: string }) {
   const { data: tailored, isLoading, error } = useTailoredResume(
     id === "0" ? null : id,
   );

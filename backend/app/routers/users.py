@@ -121,12 +121,12 @@ async def get_me(
     )
 
 
-@router.put("/me", response_model=ProfileResponse)
+@router.put("/me", response_model=UserWithProfileResponse)
 async def update_me(
     body: ProfileUpdateRequest,
     current_user: dict[str, str | int] = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
-) -> ProfileResponse:
+) -> UserWithProfileResponse:
     """Update the authenticated user's profile fields."""
     user_id = str(current_user["sub"])
     data = body.model_dump(exclude_unset=True)
@@ -134,7 +134,12 @@ async def update_me(
     profile = await update_profile(session, user_id, data)
     await _recalculate_and_persist_completeness(session, profile)
 
-    return _profile_response_from_model(profile)
+    user, _ = await get_user_with_profile(session, user_id)
+
+    return UserWithProfileResponse(
+        user=_user_response_from_model(user),
+        profile=_profile_response_from_model(profile),
+    )
 
 
 @router.put("/me/skills", response_model=ProfileResponse)

@@ -43,7 +43,7 @@ export function useProfile() {
 
   const updateProfile = useMutation({
     mutationFn: async (payload: ProfileUpdatePayload) => {
-      const { data } = await api.put<UserWithProfile>("/users/me/profile", payload);
+      const { data } = await api.put<UserWithProfile>("/users/me", payload);
       return data;
     },
     onSuccess: (updated) => {
